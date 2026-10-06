@@ -1,0 +1,2587 @@
+{
+  "kind": "safe-export reconstruction, synthetic identity/battery bytes; NOT raw manufacturer capture",
+  "source": "PodsView-diagnostics-20260908-120009-072.zip",
+  "seedAssumption": "Previously learned 39,49. Actual saved settings are not exported; unseeded case is tested separately.",
+  "rows": [
+    {
+      "seq": 1,
+      "ms": 176,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -72,
+      "oldSource": "baseline"
+    },
+    {
+      "seq": 2,
+      "ms": 1104,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -73,
+      "oldSource": "static"
+    },
+    {
+      "seq": 3,
+      "ms": 2397,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 4,
+      "ms": 3701,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -68,
+      "oldSource": "static"
+    },
+    {
+      "seq": 5,
+      "ms": 5940,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -72,
+      "oldSource": "static"
+    },
+    {
+      "seq": 7,
+      "ms": 7240,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -69,
+      "oldSource": "static"
+    },
+    {
+      "seq": 9,
+      "ms": 9486,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -65,
+      "oldSource": "static"
+    },
+    {
+      "seq": 10,
+      "ms": 10799,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 11,
+      "ms": 11727,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 14,
+      "ms": 13047,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -66,
+      "oldSource": "static"
+    },
+    {
+      "seq": 15,
+      "ms": 13979,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -68,
+      "oldSource": "static"
+    },
+    {
+      "seq": 16,
+      "ms": 15276,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 17,
+      "ms": 16944,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -66,
+      "oldSource": "static"
+    },
+    {
+      "seq": 18,
+      "ms": 19529,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 19,
+      "ms": 23447,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 20,
+      "ms": 25694,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 23,
+      "ms": 28300,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 24,
+      "ms": 30537,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -75,
+      "oldSource": "static"
+    },
+    {
+      "seq": 27,
+      "ms": 32779,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -72,
+      "oldSource": "static"
+    },
+    {
+      "seq": 28,
+      "ms": 33717,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 31,
+      "ms": 35396,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -74,
+      "oldSource": "static"
+    },
+    {
+      "seq": 32,
+      "ms": 37627,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 33,
+      "ms": 38562,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -74,
+      "oldSource": "static"
+    },
+    {
+      "seq": 36,
+      "ms": 40462,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "baseline"
+    },
+    {
+      "seq": 37,
+      "ms": 40561,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -64,
+      "oldSource": "static"
+    },
+    {
+      "seq": 39,
+      "ms": 40612,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -65,
+      "oldSource": "static"
+    },
+    {
+      "seq": 40,
+      "ms": 40671,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "static"
+    },
+    {
+      "seq": 41,
+      "ms": 40800,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -65,
+      "oldSource": "static"
+    },
+    {
+      "seq": 42,
+      "ms": 41040,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "change"
+    },
+    {
+      "seq": 43,
+      "ms": 41164,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 44,
+      "ms": 41268,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 45,
+      "ms": 41539,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "change"
+    },
+    {
+      "seq": 46,
+      "ms": 41625,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 47,
+      "ms": 41768,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 48,
+      "ms": 41868,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 49,
+      "ms": 42207,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "change"
+    },
+    {
+      "seq": 50,
+      "ms": 42338,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 51,
+      "ms": 42465,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 52,
+      "ms": 42567,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 53,
+      "ms": 42678,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 56,
+      "ms": 42821,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 57,
+      "ms": 43165,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "change"
+    },
+    {
+      "seq": 58,
+      "ms": 43320,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 59,
+      "ms": 43405,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -65,
+      "oldSource": "static"
+    },
+    {
+      "seq": 60,
+      "ms": 43528,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 61,
+      "ms": 43743,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "change"
+    },
+    {
+      "seq": 62,
+      "ms": 43760,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 63,
+      "ms": 43982,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 64,
+      "ms": 43997,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 65,
+      "ms": 44223,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "change"
+    },
+    {
+      "seq": 66,
+      "ms": 44236,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 67,
+      "ms": 44335,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 68,
+      "ms": 44363,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 69,
+      "ms": 44580,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 71,
+      "ms": 45174,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 85,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "change"
+    },
+    {
+      "seq": 72,
+      "ms": 45302,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 85,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 73,
+      "ms": 45412,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 85,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 74,
+      "ms": 45540,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 85,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 75,
+      "ms": 45754,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 93,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "change"
+    },
+    {
+      "seq": 76,
+      "ms": 45881,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 93,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 77,
+      "ms": 45988,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 78,
+      "ms": 46021,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 93,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 79,
+      "ms": 46126,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 93,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 81,
+      "ms": 46341,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 86,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "change"
+    },
+    {
+      "seq": 82,
+      "ms": 46465,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 86,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 83,
+      "ms": 46706,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 86,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 84,
+      "ms": 46818,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 86,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 85,
+      "ms": 46843,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 86,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 86,
+      "ms": 47187,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 94,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "change"
+    },
+    {
+      "seq": 87,
+      "ms": 47287,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 94,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 88,
+      "ms": 47305,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 94,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 89,
+      "ms": 47419,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 94,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 90,
+      "ms": 47647,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 94,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 92,
+      "ms": 47658,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -66,
+      "oldSource": "static"
+    },
+    {
+      "seq": 93,
+      "ms": 47765,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 87,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "change"
+    },
+    {
+      "seq": 94,
+      "ms": 47908,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 87,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 95,
+      "ms": 48010,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 87,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 96,
+      "ms": 48248,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 87,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 97,
+      "ms": 48612,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 95,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "change"
+    },
+    {
+      "seq": 98,
+      "ms": 48712,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 95,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 99,
+      "ms": 48835,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 95,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 100,
+      "ms": 48952,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 95,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 101,
+      "ms": 48965,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 102,
+      "ms": 49066,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 95,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 103,
+      "ms": 49183,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 80,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "change"
+    },
+    {
+      "seq": 104,
+      "ms": 49336,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -66,
+      "oldSource": "static"
+    },
+    {
+      "seq": 105,
+      "ms": 49367,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 80,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 106,
+      "ms": 49546,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 80,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 107,
+      "ms": 49768,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 80,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 108,
+      "ms": 49783,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 80,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 109,
+      "ms": 49893,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 80,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 110,
+      "ms": 50006,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 88,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "change"
+    },
+    {
+      "seq": 112,
+      "ms": 50137,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 88,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 113,
+      "ms": 50362,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 88,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 114,
+      "ms": 50831,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "change"
+    },
+    {
+      "seq": 115,
+      "ms": 50848,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 116,
+      "ms": 51076,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 117,
+      "ms": 51317,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 118,
+      "ms": 51442,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 119,
+      "ms": 51570,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 120,
+      "ms": 51897,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 121,
+      "ms": 52027,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 122,
+      "ms": 52378,
+      "peer": 4,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 123,
+      "ms": 53450,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 124,
+      "ms": 54387,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 125,
+      "ms": 54757,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 127,
+      "ms": 55693,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 128,
+      "ms": 56807,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -67,
+      "oldSource": "static"
+    },
+    {
+      "seq": 129,
+      "ms": 56996,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -72,
+      "oldSource": "static"
+    },
+    {
+      "seq": 132,
+      "ms": 57138,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "change"
+    },
+    {
+      "seq": 133,
+      "ms": 57140,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 134,
+      "ms": 57225,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 135,
+      "ms": 57332,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 136,
+      "ms": 57356,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 137,
+      "ms": 57608,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 138,
+      "ms": 57686,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 139,
+      "ms": 57700,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 140,
+      "ms": 57814,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 141,
+      "ms": 57917,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 142,
+      "ms": 58040,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 143,
+      "ms": 58407,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "change"
+    },
+    {
+      "seq": 144,
+      "ms": 58509,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 145,
+      "ms": 58532,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 146,
+      "ms": 58873,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 147,
+      "ms": 58998,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 148,
+      "ms": 59484,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "change"
+    },
+    {
+      "seq": 149,
+      "ms": 59606,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 150,
+      "ms": 59809,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 151,
+      "ms": 59944,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 152,
+      "ms": 60066,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "change"
+    },
+    {
+      "seq": 153,
+      "ms": 60187,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 154,
+      "ms": 60399,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 155,
+      "ms": 60537,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 156,
+      "ms": 60756,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -60,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 157,
+      "ms": 60907,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 83,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 158,
+      "ms": 61004,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "change"
+    },
+    {
+      "seq": 159,
+      "ms": 61027,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -60,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 160,
+      "ms": 61265,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 161,
+      "ms": 61362,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 162,
+      "ms": 61386,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 163,
+      "ms": 61509,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 164,
+      "ms": 61585,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 165,
+      "ms": 61609,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 166,
+      "ms": 61617,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -77,
+      "oldSource": "static"
+    },
+    {
+      "seq": 167,
+      "ms": 61715,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 168,
+      "ms": 61835,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 169,
+      "ms": 61935,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 170,
+      "ms": 62076,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "change"
+    },
+    {
+      "seq": 171,
+      "ms": 62174,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -75,
+      "oldSource": "static"
+    },
+    {
+      "seq": 172,
+      "ms": 62287,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 173,
+      "ms": 62413,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 174,
+      "ms": 62543,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -69,
+      "oldSource": "static"
+    },
+    {
+      "seq": 175,
+      "ms": 62556,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 176,
+      "ms": 62662,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 84,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 177,
+      "ms": 62919,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 178,
+      "ms": 63047,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "change"
+    },
+    {
+      "seq": 179,
+      "ms": 63117,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 180,
+      "ms": 63146,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 181,
+      "ms": 63264,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -51,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 182,
+      "ms": 63484,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 183,
+      "ms": 63606,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 184,
+      "ms": 63716,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -51,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 185,
+      "ms": 63836,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 186,
+      "ms": 64067,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 187,
+      "ms": 64561,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 188,
+      "ms": 64677,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 189,
+      "ms": 64786,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 190,
+      "ms": 64897,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -51,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 191,
+      "ms": 65145,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 192,
+      "ms": 65270,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 193,
+      "ms": 65417,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 194,
+      "ms": 65606,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 195,
+      "ms": 65716,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -71,
+      "oldSource": "static"
+    },
+    {
+      "seq": 196,
+      "ms": 65836,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -64,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 197,
+      "ms": 65858,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 198,
+      "ms": 65955,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 199,
+      "ms": 66318,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -74,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 200,
+      "ms": 66424,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 201,
+      "ms": 66550,
+      "peer": 4,
+      "shape": 61,
+      "lidByte": 92,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 203,
+      "ms": 68007,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -71,
+      "oldSource": "static"
+    },
+    {
+      "seq": 204,
+      "ms": 68194,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 205,
+      "ms": 69861,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -64,
+      "oldSource": "static"
+    },
+    {
+      "seq": 206,
+      "ms": 70799,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 208,
+      "ms": 71286,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "known"
+    },
+    {
+      "seq": 209,
+      "ms": 71416,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 210,
+      "ms": 71518,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 211,
+      "ms": 71627,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -60,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 212,
+      "ms": 72095,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 213,
+      "ms": 72123,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 214,
+      "ms": 72227,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 215,
+      "ms": 72354,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 216,
+      "ms": 72467,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -64,
+      "oldSource": "static"
+    },
+    {
+      "seq": 217,
+      "ms": 72957,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "change"
+    },
+    {
+      "seq": 218,
+      "ms": 73038,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 219,
+      "ms": 73066,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 220,
+      "ms": 73405,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 221,
+      "ms": 73536,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 223,
+      "ms": 73761,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -72,
+      "oldSource": "static"
+    },
+    {
+      "seq": 224,
+      "ms": 73873,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "change"
+    },
+    {
+      "seq": 225,
+      "ms": 73987,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 226,
+      "ms": 74004,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 227,
+      "ms": 74339,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 228,
+      "ms": 74366,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 229,
+      "ms": 74464,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 230,
+      "ms": 74591,
+      "peer": 6,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 231,
+      "ms": 74704,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -64,
+      "oldSource": "static"
+    },
+    {
+      "seq": 232,
+      "ms": 76005,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -71,
+      "oldSource": "static"
+    },
+    {
+      "seq": 233,
+      "ms": 77306,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 234,
+      "ms": 77678,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 235,
+      "ms": 78600,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -69,
+      "oldSource": "static"
+    },
+    {
+      "seq": 237,
+      "ms": 78855,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "change"
+    },
+    {
+      "seq": 239,
+      "ms": 78966,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 240,
+      "ms": 79195,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 241,
+      "ms": 79301,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 242,
+      "ms": 79428,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 243,
+      "ms": 79605,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 245,
+      "ms": 79787,
+      "peer": 1,
+      "shape": 62,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 246,
+      "ms": 79904,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 247,
+      "ms": 80263,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 248,
+      "ms": 80377,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 249,
+      "ms": 80496,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -66,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 250,
+      "ms": 80614,
+      "peer": 6,
+      "shape": 61,
+      "lidByte": 91,
+      "modelCode": 5152,
+      "rssi": -60,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 252,
+      "ms": 81107,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 253,
+      "ms": 84891,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "known"
+    },
+    {
+      "seq": 254,
+      "ms": 84997,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 255,
+      "ms": 85089,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 256,
+      "ms": 85208,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -54,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 257,
+      "ms": 85452,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 258,
+      "ms": 85695,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 259,
+      "ms": 85824,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 81,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 260,
+      "ms": 86536,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "static"
+    },
+    {
+      "seq": 261,
+      "ms": 87828,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -69,
+      "oldSource": "static"
+    },
+    {
+      "seq": 262,
+      "ms": 90334,
+      "peer": 7,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "change"
+    },
+    {
+      "seq": 263,
+      "ms": 90416,
+      "peer": 7,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -58,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 265,
+      "ms": 90536,
+      "peer": 7,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -70,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 266,
+      "ms": 90677,
+      "peer": 7,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 267,
+      "ms": 90774,
+      "peer": 7,
+      "shape": 61,
+      "lidByte": 89,
+      "modelCode": 5152,
+      "rssi": -69,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 269,
+      "ms": 91380,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "change"
+    },
+    {
+      "seq": 270,
+      "ms": 91584,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 271,
+      "ms": 91942,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -56,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 272,
+      "ms": 92178,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 273,
+      "ms": 92306,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 274,
+      "ms": 92429,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 275,
+      "ms": 92534,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 82,
+      "modelCode": 5152,
+      "rssi": -59,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 276,
+      "ms": 92546,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -61,
+      "oldSource": "static"
+    },
+    {
+      "seq": 277,
+      "ms": 92895,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "change"
+    },
+    {
+      "seq": 278,
+      "ms": 92917,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -64,
+      "oldSource": "static"
+    },
+    {
+      "seq": 279,
+      "ms": 93019,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -57,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 280,
+      "ms": 93474,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -62,
+      "oldSource": "static"
+    },
+    {
+      "seq": 281,
+      "ms": 93477,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -50,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 282,
+      "ms": 93839,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -55,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 283,
+      "ms": 93847,
+      "peer": 1,
+      "shape": 40,
+      "lidByte": 16,
+      "modelCode": 5152,
+      "rssi": -63,
+      "oldSource": "static"
+    },
+    {
+      "seq": 284,
+      "ms": 93962,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -49,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 285,
+      "ms": 94091,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 286,
+      "ms": 94196,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 287,
+      "ms": 94449,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 288,
+      "ms": 94777,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -53,
+      "oldSource": "hold"
+    },
+    {
+      "seq": 289,
+      "ms": 95142,
+      "peer": 7,
+      "shape": 77,
+      "lidByte": 90,
+      "modelCode": 5152,
+      "rssi": -52,
+      "oldSource": "hold"
+    }
+  ]
+}

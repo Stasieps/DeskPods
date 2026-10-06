@@ -1,0 +1,13 @@
+# 2026-08-30 17:20:25: both earbuds are out of the case, the lid is opened, and the case
+# sends its state from an address never heard before and then goes quiet. Nothing here will
+# ever change a lid byte, so before 0.8.13 the popup could not appear at all - which is the
+# "there are no earbuds inside and the window never opens" report.
+!name 14-empty-case-first-open
+!paired 1
+!connected 0
+!nearby 1
+!shapes 49,39
+!expect shows 1
+!expect show-within-ms 1500
+p 0 7A6C21FBF51F -63 9 1 1 071901142002F58F1100059D4D3A1ECD97C0AACFFCD46FBA655358
+p 1983 4213F7540697 -51 2 1 1 071901142024F6975100005A062C6642AA81E70168418B6EA599E9

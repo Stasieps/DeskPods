@@ -1,0 +1,11 @@
+{
+  "kind": "photo-depth-turntable",
+  "source": "airpods-case-open.png",
+  "sourceSha256": "ad0295d2f209f0bb893cd2f68e24a2acb78a4e2e22905e3f8f614d5138027cdb",
+  "frameCount": 61,
+  "frameSize": 256,
+  "columns": 8,
+  "periodSeconds": 18.0,
+  "angleDegrees": 20.0,
+  "notA360Model": true
+}

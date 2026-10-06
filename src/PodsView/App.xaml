@@ -1,0 +1,616 @@
+<Application x:Class="PodsView.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+
+        <!-- ==================== Typography ====================
+             These lists are only a starting point: FontProbe checks which of the
+             families is really installed, overwrites these same keys with the winner
+             and writes the result to the log, so the screen and the log agree on what
+             is on it. 0.8.18 put two Windows 11 extras at the head of these chains, and
+             on this Windows 10 machine every token silently fell back to the system
+             default - the whole typography patch looked like nothing had changed.
+             0.8.22: the device name is set in Franklin Gothic Medium, a real designed
+             medium weight; text is Corbel and the digits are Consolas. All three ship
+             with Windows, so nothing optional is first in a chain any more. The obvious
+             DIN-style alternative is a variable font and WPF resolves a single static
+             instance of it, so it is deliberately not in these lists. -->
+        <FontFamily x:Key="DisplayFont">Segoe UI, Arial</FontFamily>
+        <FontFamily x:Key="UiFont">Segoe UI, Arial</FontFamily>
+        <FontFamily x:Key="MonoFont">Consolas, Courier New</FontFamily>
+        <sys:Double x:Key="FontNano">9</sys:Double>
+        <sys:Double x:Key="FontMicro">11</sys:Double>
+        <sys:Double x:Key="FontBody">13</sys:Double>
+        <sys:Double x:Key="FontTitle">15</sys:Double>
+        <sys:Double x:Key="FontValue">20</sys:Double>
+        <sys:Double x:Key="FontHeadline">22</sys:Double>
+        <sys:Double x:Key="FontHero">46</sys:Double>
+
+        <!-- ==================== Surfaces ==================== -->
+        <Color x:Key="CanvasColor">#050506</Color>
+        <Color x:Key="SurfaceColor">#08090A</Color>
+        <Color x:Key="RaisedColor">#101113</Color>
+        <Color x:Key="ElevatedColor">#17191C</Color>
+        <Color x:Key="HairlineColor">#25272B</Color>
+        <Color x:Key="BorderColor">#34363B</Color>
+        <Color x:Key="TagBorderColor">#3B3D42</Color>
+
+        <!-- ==================== Text ==================== -->
+        <Color x:Key="PrimaryTextColor">#F5F5F3</Color>
+        <Color x:Key="SecondaryTextColor">#9A9CA2</Color>
+        <Color x:Key="MutedTextColor">#5F6269</Color>
+
+        <!-- ==================== Semantic accents ====================
+             The palette is intentionally monochrome: white means healthy,
+             amber means "getting low", red is the single Nothing-style accent. -->
+        <Color x:Key="AccentColor">#FF5147</Color>
+        <Color x:Key="WarnColor">#F0B84C</Color>
+        <Color x:Key="OkColor">#F5F5F3</Color>
+        <Color x:Key="InfoColor">#9A9CA2</Color>
+
+        <!-- "Live" is the only saturated positive colour in the product: it marks
+             an active connection and an open case. Battery fills stay white so a
+             green dot always means "link is alive", never "battery is fine". -->
+        <Color x:Key="LiveColor">#37F712</Color>
+
+        <!-- ==================== Popup surface ====================
+             0.8.18: these three used to be written by hand inside
+             CasePopupWindow.xaml, so switching the theme repainted the dots but
+             left the card itself black. They are palette entries now, and
+             ThemeManager rewrites them for all seven looks. -->
+        <Color x:Key="PopupCanvasColor">#FA07080A</Color>
+        <Color x:Key="PopupRimColor">#45FFFFFF</Color>
+        <Color x:Key="PopupGlowColor">#37F712</Color>
+
+        <SolidColorBrush x:Key="CanvasBrush" Color="{StaticResource CanvasColor}" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+        <SolidColorBrush x:Key="RaisedBrush" Color="{StaticResource RaisedColor}" />
+        <SolidColorBrush x:Key="ElevatedBrush" Color="{StaticResource ElevatedColor}" />
+        <SolidColorBrush x:Key="HairlineBrush" Color="{StaticResource HairlineColor}" />
+        <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+        <SolidColorBrush x:Key="TagBorderBrush" Color="{StaticResource TagBorderColor}" />
+        <SolidColorBrush x:Key="PrimaryTextBrush" Color="{StaticResource PrimaryTextColor}" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="{StaticResource SecondaryTextColor}" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="{StaticResource MutedTextColor}" />
+        <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+        <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource WarnColor}" />
+        <SolidColorBrush x:Key="OkBrush" Color="{StaticResource OkColor}" />
+        <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}" />
+        <SolidColorBrush x:Key="LiveBrush" Color="{StaticResource LiveColor}" />
+        <SolidColorBrush x:Key="PopupCanvasBrush" Color="{StaticResource PopupCanvasColor}" />
+        <SolidColorBrush x:Key="PopupRimBrush" Color="{StaticResource PopupRimColor}" />
+        <SolidColorBrush x:Key="PopupGlowBrush" Color="{StaticResource PopupGlowColor}" />
+
+        <!-- ==================== Shared dot texture ====================
+             One definition for every window so the density always matches. -->
+        <DrawingBrush x:Key="DotPattern" TileMode="Tile" Viewport="0,0,5,5" ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <GeometryDrawing Brush="#868C96">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="1.5,1.5" RadiusX="0.62" RadiusY="0.62" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <!-- Alpha ramps for the dot field. Only the alpha channel matters here: an
+             opacity mask ignores the colour. They live in App.xaml so no window
+             needs a literal colour of its own. -->
+        <LinearGradientBrush x:Key="DotFadeMask" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#FF000000" Offset="0" />
+            <GradientStop Color="#E6000000" Offset="0.1" />
+            <GradientStop Color="#73000000" Offset="0.22" />
+            <GradientStop Color="#00000000" Offset="0.36" />
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="PopupDotFadeMask" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#FF000000" Offset="0" />
+            <GradientStop Color="#FF000000" Offset="0.07" />
+            <GradientStop Color="#7A000000" Offset="0.34" />
+            <GradientStop Color="#26000000" Offset="0.56" />
+            <GradientStop Color="#00000000" Offset="0.76" />
+        </LinearGradientBrush>
+
+        <!-- Rebuilt per theme by ThemeManager so the halo behind the photo follows
+             the palette instead of staying a dark blob on the light themes. -->
+        <RadialGradientBrush x:Key="ProductGlow">
+            <GradientStop Color="#2A2E34" Offset="0" />
+            <GradientStop Color="#00000000" Offset="1" />
+        </RadialGradientBrush>
+
+        <!-- ==================== Typography styles ==================== -->
+        <!-- Micro labels are uppercase mono at 11 px. The extra 0.6 px of tracking is
+             what makes a row of capitals read as a label instead of shouting. -->
+        <Style x:Key="MicroLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        </Style>
+
+        <!-- The device name: the one place with a display face, so the window has a
+             voice of its own instead of looking like a dialog box. -->
+        <Style x:Key="TitleText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}" />
+            <!-- 0.8.23: headline size. The 22 px attempt in 0.8.20 crowded the status
+                 line, but that line is 11 px now and the header row grew, so the name can
+                 finally be the largest thing in the card.
+                 Medium, not Bold: the display face is a single designed medium weight, and
+                 asking a family for a weight it does not carry is how WPF ends up
+                 emboldening glyphs by hand.
+                 Left, because a TextBlock with a MaxWidth and the default Stretch
+                 alignment is centred by WPF inside whatever the header has left - which is
+                 what made the name look indented in 0.8.21.
+                 Ideal formatting on purpose, against the Display mode the window sets for
+                 everything else: Display snaps stems to whole pixels, which is right for
+                 an 11 px label and coarse for a 22 px word, because it also rounds the
+                 space between the letters. Ideal keeps the spacing the type designer drew.
+                 The fixed line height stops WPF from padding the big line box, so the
+                 name and the status below it read as one block. -->
+            <Setter Property="FontSize" Value="{StaticResource FontHeadline}" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="LineHeight" Value="26" />
+            <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        </Style>
+
+        <!-- The L / R / C chips. Fixed box, centred glyph, same optical weight as the
+             value column so the three rows read as one grid. -->
+        <Style x:Key="ChipText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontBody}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        </Style>
+
+        <Style x:Key="MicroLabelMuted" TargetType="TextBlock" BasedOn="{StaticResource MicroLabel}">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        </Style>
+
+        <!-- ==================== 0.8.21 card typography ====================
+             Four styles the approved card needs. They are separate from MicroLabel on
+             purpose: MicroLabel also dresses the section headers in Settings, and
+             restyling the card must not quietly restyle that window too. -->
+
+        <!-- The status line under the device name: UI face, sentence weight. -->
+        <!-- This line lies directly on the dot field, where 11 px in the secondary grey
+             could not be read at all (0.8.21). 0.8.23 takes the size back down to 11 px
+             on request, and keeps the two things that made it legible: its own weight and
+             the primary colour. Small text over a texture is a contrast problem, not a
+             size problem - the size was never what made it unreadable. -->
+        <Style x:Key="StatusLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        </Style>
+
+        <!-- The version pill. The opaque fill is the whole point of it: the dot field
+             runs under the footer, and reading a build number through a texture is
+             exactly what "not clearly visible" meant. Canvas fill, so the pill matches
+             the card on all seven themes and the dots stop at its border. -->
+        <Style x:Key="VersionChip" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CanvasBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TagBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="9,1,9,2" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+        </Style>
+
+        <!-- The digits inside the pill: mono, tabular, secondary instead of muted, so
+             the build number is legible rather than a grey smudge. -->
+        <Style x:Key="VersionChipText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        </Style>
+
+        <Style x:Key="SectionLabel" TargetType="TextBlock" BasedOn="{StaticResource MicroLabel}">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style x:Key="HintText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!-- Numbers only: tabular figures so 100% -> 90% cannot shift the column,
+             and Display formatting so the digits sit on whole pixels. -->
+        <Style x:Key="ValueText" TargetType="TextBlock">
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontValue}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        </Style>
+
+        <!-- ==================== Containers ==================== -->
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="17" />
+        </Style>
+
+        <Style x:Key="TagBox" TargetType="Border">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TagBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="3" />
+        </Style>
+
+        <Style x:Key="TrackBorder" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource HairlineBrush}" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+
+        <!-- ==================== Windows ==================== -->
+        <Style TargetType="Window">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+            <Setter Property="Background" Value="{DynamicResource CanvasBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+        </Style>
+
+        <!-- ==================== Icons ====================
+             0.8.18: Segoe MDL2 glyphs are gone. Every icon is a vector path, so it
+             takes the theme colour and cannot fall back to a missing font. -->
+        <Style x:Key="IconPath" TargetType="Path">
+            <Setter Property="Stroke" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="StrokeThickness" Value="1.4" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!-- ==================== Buttons ==================== -->
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource ElevatedBrush}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource SecondaryTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.68" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.34" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+            <Setter Property="Background" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource CanvasBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="PrimaryBorder" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="PrimaryBorder" Property="BorderBrush" Value="{DynamicResource SecondaryTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="PrimaryBorder" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="PrimaryBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.34" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Icon-only square button used for the popup close glyph. -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="IconBorder" Background="{TemplateBinding Background}" CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="IconBorder" Property="Background" Value="{DynamicResource ElevatedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==================== Inputs ==================== -->
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontBody}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="Box" Width="18" Height="18" CornerRadius="3" Background="{DynamicResource ElevatedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalAlignment="Center">
+                                <Path x:Name="Tick" Data="M 3,8 L 7,12 L 15,4" Stroke="{DynamicResource CanvasBrush}" StrokeThickness="2" StrokeStartLineCap="Square" StrokeEndLineCap="Square" Visibility="Collapsed" />
+                            </Border>
+                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.38" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==================== Scrollbar ====================
+             Needed by the dropdown list below: the stock one is a white strip on
+             every dark theme. -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="9" />
+            <Setter Property="MinWidth" Value="9" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Border x:Name="ScrollRoot" Background="Transparent">
+                            <Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Focusable="False" Opacity="0" Background="Transparent" BorderThickness="0" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border CornerRadius="3" Margin="2" Background="{DynamicResource BorderBrush}" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Focusable="False" Opacity="0" Background="Transparent" BorderThickness="0" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
+                                <Setter Property="Height" Value="9" />
+                                <Setter Property="MinHeight" Value="9" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==================== Text input ==================== -->
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource ElevatedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="InputBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="InputBorder" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==================== Dropdown ====================
+             The one the user asked about for months: picking a language or a theme
+             opened the stock Windows list, which is white text-on-white on every
+             dark theme because only the closed box was ever styled. Button, popup,
+             rows and scrollbar are all ours now, all on theme brushes. -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ElevatedBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource HairlineBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="11,5" />
+            <Setter Property="Background" Value="{DynamicResource ElevatedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+            <Setter Property="FontSize" Value="{StaticResource FontMicro}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="MaxDropDownHeight" Value="260" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border x:Name="KeyboardRing" BorderBrush="{DynamicResource SecondaryTextBrush}" BorderThickness="1" CornerRadius="5" Margin="-2" IsHitTestVisible="False" Visibility="Collapsed" />
+                            <ToggleButton x:Name="DropDownToggle" Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Chrome" Background="{DynamicResource ElevatedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="22" />
+                                                </Grid.ColumnDefinitions>
+                                                <Path Grid.Column="1" Data="M 0,0 L 7,0 L 3.5,4.5 Z" Fill="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource SecondaryTextBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource SecondaryTextBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter x:Name="SelectionSite" IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Left" VerticalAlignment="Center"
+                                              TextElement.Foreground="{DynamicResource PrimaryTextBrush}" />
+
+                            <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False"
+                                   Placement="Bottom" PopupAnimation="None" SnapsToDevicePixels="True"
+                                   IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="5" Margin="0,3,0,0" Padding="3" SnapsToDevicePixels="True"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        TextElement.Foreground="{DynamicResource PrimaryTextBrush}">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="KeyboardRing" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.38" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Application.Resources>
+</Application>

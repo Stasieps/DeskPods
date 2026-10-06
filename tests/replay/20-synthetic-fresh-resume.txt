@@ -1,0 +1,12 @@
+# SYNTHETIC: first fresh packet after silence must resume immediately.
+!name 20-synthetic-fresh-resume
+!paired 1
+!connected 0
+!nearby 0
+!expect shows 2
+!expect hides 2
+!expect show-within-ms 0
+!expect hide-within-ms 0
+p 0 607CF6521D34 -65 1 1 1 071901142024FA95310000CC8EA9B71CA710A6C0CFD7F73F0643BB
+p 12000 607CF6521D34 -65 1 1 1 071901142024FA95310000CC8EA9B71CA710A6C0CFD7F73F0643BB
+p 12100 607CF6521D34 -65 1 1 1 071901142024FA95390000CC8EA9B71CA710A6C0CFD7F73F0643BB

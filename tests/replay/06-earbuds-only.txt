@@ -1,0 +1,22 @@
+# PodsView replay fixture - recorded air, not invented numbers.
+# Source: %LOCALAPPDATA%\PodsView\Logs\podsview-trace.log, session 0.8.8, 2026-08-29.
+# Lines: <p|s> <t_ms> <address> <rssi> <ageMs> <trusted> <bound> <manufacturer payload hex>
+#   p = logged exactly as it arrived.
+#   s = suspect: a packet the filter dropped, so the log kept no payload of its own. The lid
+#       byte is real, the rest of the payload is copied from the packet before it. A suspect
+#       line is never counted as something that physically happened - it is here to prove it
+#       changes nothing.
+# sim.py and the C# smoke test both replay these through the real parser, the real filter and
+# the real state machine and check the timings below. Regenerated from the log, do not edit.
+#
+# A minute of earbud advertisements with the case shut. Nothing may appear.
+#
+!name 06-earbuds-only
+!window 21:42:20 - 21:43:20
+!paired 1
+!connected 0
+!nearby 1
+!expect never-show
+p 0 6E3648A9DAF9 -69 1 1 1 071901142002F98F110005E78EC410A1F6935260823594DE5C434D
+p 26805 6E3648A9DAF9 -63 1 1 1 071901142002F98F110005CE528BF8F9477AFA79A0D2F69F066E88
+p 32061 612F4B9CE3B6 -58 1 1 1 071901142024FA9311000070BE9A810E4A61F2D215A2544D9CA4AA

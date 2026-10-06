@@ -1,0 +1,134 @@
+name: Release Windows build
+
+# Pushing tag vX.Y.Z builds the installer and publishes the GitHub Release.
+# The tag must match VERSION, so a release can never carry a number that the
+# installer, the csproj or START.cmd disagree with.
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Installer and release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Decide the version and whether this is a new release
+        id: version
+        shell: pwsh
+        run: |
+          python .github/scripts/deskpods_version.py --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = (Get-Content VERSION -Raw).Trim()
+          $ref = '${{ github.ref_name }}'
+          # A tag build must carry exactly the version the tree agrees on.
+          if ($ref -match '^v\d+\.\d+\.\d+$' -and $ref -ne "v$version") {
+            throw "Tag $ref does not match VERSION $version"
+          }
+          git fetch --tags --force --quiet
+          $existing = git tag --list "v$version"
+          $publish = 'true'
+          if (-not [string]::IsNullOrWhiteSpace($existing) -and $ref -notmatch '^v') {
+            # Already released. Bump VERSION on a version/X.Y.Z branch for the next one.
+            Write-Host "v$version already exists - nothing to publish."
+            $publish = 'false'
+          }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=v$version"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "publish=$publish"
+
+      - name: AirPods parser smoke tests
+        if: steps.version.outputs.publish == 'true'
+        run: dotnet run --project tests/PodsView.ParserSmoke/PodsView.ParserSmoke.csproj -c Release
+
+      - name: Source contracts and replay model
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          python tests/portable/check18.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/portable/sim.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: WPF UI smoke tests
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          dotnet build tests/PodsView.UiSmoke/PodsView.UiSmoke.csproj -c Release -r win-x64 --self-contained true --no-incremental --output .build/ci-ui
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet .build/ci-ui/PodsView.UiSmoke.dll ui-smoke-evidence
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish win-x64
+        if: steps.version.outputs.publish == 'true'
+        run: >
+          dotnet publish src/PodsView/PodsView.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=false
+          -p:DebugType=None
+          -o publish/win-x64
+
+      - name: Build the installer
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Qp installer/DeskPods.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = '${{ steps.version.outputs.version }}'
+          # A second copy under a fixed name feeds /releases/latest/download/.
+          Copy-Item "dist/DeskPods_Setup_v$version.exe" 'dist/DeskPods_Setup.exe' -Force
+
+      - name: Portable ZIP, as before
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.version.outputs.tag }}'
+          $dir = 'publish/win-x64'
+          New-Item -ItemType Directory -Force -Path "$dir/scripts" | Out-Null
+          Copy-Item START.cmd $dir -Force
+          Copy-Item scripts/safe-deploy.ps1     "$dir/scripts" -Force
+          Copy-Item scripts/launcher.ps1        "$dir/scripts" -Force
+          Copy-Item scripts/install-release.ps1 "$dir/scripts" -Force
+          Copy-Item scripts/uninstall.ps1       "$dir/scripts" -Force
+          Copy-Item README.md                   $dir -Force
+          Copy-Item LICENSE                     $dir -Force
+          Compress-Archive -Path "$dir/*" -DestinationPath "dist/PodsView-$tag-win-x64.zip" -Force
+          Get-ChildItem dist
+
+      - name: Release notes
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: python .github/scripts/deskpods_release_notes.py --out release-notes.md
+
+      - name: Publish GitHub release
+        if: steps.version.outputs.publish == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: DeskPods ${{ steps.version.outputs.tag }}
+          body_path: release-notes.md
+          files: |
+            dist/DeskPods_Setup_v${{ steps.version.outputs.version }}.exe
+            dist/DeskPods_Setup.exe
+            dist/PodsView-${{ steps.version.outputs.tag }}-win-x64.zip

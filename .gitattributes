@@ -1,0 +1,19 @@
+* text=auto
+
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+*.cs text
+*.xaml text
+*.csproj text
+*.md text
+
+*.png binary
+*.ico binary
+*.zip binary
+
+# Keep the language bar honest: the app is C#/WPF, the Python files are tests and tools.
+tests/** linguist-documentation
+tools/** linguist-documentation
+.github/** linguist-documentation

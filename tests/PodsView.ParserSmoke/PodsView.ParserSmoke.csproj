@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>PodsView.ParserSmoke</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\src\PodsView\AdvertisementDiagnostics.cs" Link="AdvertisementDiagnostics.cs" />
+    <Compile Include="..\..\src\PodsView\Models.cs" Link="Models.cs" />
+    <Compile Include="..\..\src\PodsView\DeviceCatalog.cs" Link="DeviceCatalog.cs" />
+    <Compile Include="..\..\src\PodsView\DiagnosticSanitizer.cs" Link="DiagnosticSanitizer.cs" />
+    <Compile Include="..\..\src\PodsView\SupportLink.cs" Link="SupportLink.cs" />
+    <Compile Include="..\..\src\PodsView\AirPodsAdvertisementParser.cs" Link="AirPodsAdvertisementParser.cs" />
+    <Compile Include="..\..\src\PodsView\PacketFilter.cs" Link="PacketFilter.cs" />
+    <Compile Include="..\..\src\PodsView\LidSignal.cs" Link="LidSignal.cs" />
+    <Compile Include="..\..\src\PodsView\CaseSignalClassifier.cs" Link="CaseSignalClassifier.cs" />
+    <Compile Include="..\..\src\PodsView\RecentLidEdges.cs" Link="RecentLidEdges.cs" />
+    <Compile Include="..\..\src\PodsView\LidStateMachine.cs" Link="LidStateMachine.cs" />
+    <Compile Include="..\..\src\PodsView\DeviceTracker.cs" Link="DeviceTracker.cs" />
+    <Compile Include="..\..\src\PodsView\BatteryMemory.cs" Link="BatteryMemory.cs" />
+    <Compile Include="..\..\src\PodsView\BatteryFormat.cs" Link="BatteryFormat.cs" />
+    <Compile Include="..\..\src\PodsView\UpdateRelease.cs" Link="UpdateRelease.cs" />
+    <Compile Include="..\..\src\PodsView\AppSettings.cs" Link="AppSettings.cs" />
+    <Compile Include="..\..\src\PodsView\ProductMotion.cs" Link="ProductMotion.cs" />
+    <Compile Include="..\..\src\PodsView\StartupObservationBuffer.cs" Link="StartupObservationBuffer.cs" />
+    <None Include="..\replay-safe\22-charging-open-close.json" Link="replay-safe\22-charging-open-close.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

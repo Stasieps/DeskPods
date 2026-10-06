@@ -1,0 +1,124 @@
+<Window x:Class="PodsView.CasePopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="272" Height="120" WindowStyle="None" ResizeMode="NoResize"
+        AllowsTransparency="False" Background="{DynamicResource PopupCanvasBrush}" ShowInTaskbar="False"
+        Topmost="True" ShowActivated="False" Focusable="False" UseLayoutRounding="True" SnapsToDevicePixels="True">
+
+    <!-- 0.8.39: no longer a layered (AllowsTransparency) window. Layered WPF windows are
+         the path that can stop repainting after the display sleeps; DWM now rounds the
+         corners on Windows 11 and the card radius matches its 8 px.
+         Rounded card with a hairline light rim, as in the old build. No product
+         photo: the popup only has to answer "how much is left" at a glance. -->
+    <Border x:Name="PopupFrame" CornerRadius="8" Background="{DynamicResource PopupCanvasBrush}" BorderBrush="{DynamicResource PopupRimBrush}" BorderThickness="1" ClipToBounds="True">
+        <Grid x:Name="PopupContent">
+            <!-- Same shared dot texture as the main window. -->
+            <Rectangle Fill="{DynamicResource DotPattern}" Opacity="0.5" IsHitTestVisible="False" OpacityMask="{StaticResource PopupDotFadeMask}" />
+
+            <Grid Margin="18,12,16,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="1" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Compact header: the old layout kept the live state on the right, so
+                     the card stays 272x120 instead of growing vertically. -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="24" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="PopupDeviceNameText" Text="AirPods" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontTitle}" FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,1,6,0">
+                        <Ellipse x:Name="PopupStatusDot" Width="9" Height="9" Fill="Transparent" Stroke="{DynamicResource LiveBrush}" StrokeThickness="1.6" Margin="0,0,7,0" VerticalAlignment="Center">
+                            <Ellipse.Effect>
+                                <DropShadowEffect x:Name="PopupLiveGlow" BlurRadius="10" ShadowDepth="0" Opacity="0.9" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <TextBlock x:Name="PopupOpenText" Text="CASE OPEN" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontNano}" FontWeight="Bold"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button x:Name="PopupCloseButton" AutomationProperties.Name="Close" Grid.Column="2" Style="{StaticResource IconButton}" Click="Close_Click" Width="24" Height="24"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" ToolTip="Close">
+                        <TextBlock Text="×" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontBody}" Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                </Grid>
+
+                <!-- The divider that splits identity from numbers. -->
+                <Border Grid.Row="2" Background="{DynamicResource HairlineBrush}" />
+
+                <!-- L / R / C columns, each closed off by a thin fill line. -->
+                <Grid Grid.Row="3" Margin="0,9,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="13" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="2" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="PopupLeftLabelText" Text="L" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontMicro}" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="PopupLeftValueText" Grid.Row="1" Text="—" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontValue}" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border Grid.Row="2" Style="{StaticResource TrackBorder}">
+                            <Border x:Name="PopupLeftFill" Background="{DynamicResource OkBrush}" RenderTransformOrigin="0,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="PopupLeftScale" ScaleX="0" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="13" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="2" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="PopupRightLabelText" Text="R" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontMicro}" FontWeight="Bold" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="PopupRightValueText" Grid.Row="1" Text="—" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontValue}" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border Grid.Row="2" Style="{StaticResource TrackBorder}">
+                            <Border x:Name="PopupRightFill" Background="{DynamicResource OkBrush}" RenderTransformOrigin="0,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="PopupRightScale" ScaleX="0" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Column="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="13" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="2" />
+                        </Grid.RowDefinitions>
+                        <!-- The case label doubles as the honesty indicator: C or C LAST. -->
+                        <TextBlock x:Name="PopupCaseLabelText" Text="C" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontMicro}" FontWeight="Bold"
+                                   Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="PopupCaseValueText" Grid.Row="1" Text="—" FontFamily="{DynamicResource UiFont}" FontSize="{StaticResource FontValue}" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border Grid.Row="2" Style="{StaticResource TrackBorder}">
+                            <Border x:Name="PopupCaseFill" Background="{DynamicResource OkBrush}" RenderTransformOrigin="0,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="PopupCaseScale" ScaleX="0" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

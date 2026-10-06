@@ -1,0 +1,35 @@
+# PodsView replay fixture - recorded air, not invented numbers.
+# Source: %LOCALAPPDATA%\PodsView\Logs\podsview-trace.log, session 0.8.8, 2026-08-29.
+# Lines: <p|s> <t_ms> <address> <rssi> <ageMs> <trusted> <bound> <manufacturer payload hex>
+#   p = logged exactly as it arrived.
+#   s = suspect: a packet the filter dropped, so the log kept no payload of its own. The lid
+#       byte is real, the rest of the payload is copied from the packet before it. A suspect
+#       line is never counted as something that physically happened - it is here to prove it
+#       changes nothing.
+# sim.py and the C# smoke test both replay these through the real parser, the real filter and
+# the real state machine and check the timings below. Regenerated from the log, do not edit.
+#
+# Reopening 0.6 s after a close. 0.8.8 held this one behind the close lockout for 612 ms.
+#
+!name 02-open-after-close
+!window 21:43:28.900000 - 21:43:31.600000
+!paired 1
+!connected 0
+!nearby 1
+!expect shows 1
+!expect hides 1
+!expect show-within-ms 250
+!expect hide-within-ms 250
+p 0 612F4B9CE3B6 -63 2 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 257 612F4B9CE3B6 -63 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 357 612F4B9CE3B6 -69 2 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 487 612F4B9CE3B6 -65 3 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 613 612F4B9CE3B6 -73 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 708 612F4B9CE3B6 -70 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 1191 612F4B9CE3B6 -58 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 1426 612F4B9CE3B6 -61 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 1699 612F4B9CE3B6 -61 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 1770 612F4B9CE3B6 -57 2 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 1792 612F4B9CE3B6 -57 1 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 1888 612F4B9CE3B6 -60 4 1 1 0719011420739A93330005A0D270B614E21479802DF01BA82E2C76
+p 2280 612F4B9CE3B6 -58 1 1 1 0719011420739A933B000513B1DB3143F26DEA12A486BE4C5AE358

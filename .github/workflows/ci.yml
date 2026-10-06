@@ -1,0 +1,88 @@
+name: Check branch
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Tests, UI smoke and installer
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: One version everywhere
+        shell: pwsh
+        run: |
+          python .github/scripts/deskpods_version.py --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: AirPods parser smoke tests
+        run: dotnet run --project tests/PodsView.ParserSmoke/PodsView.ParserSmoke.csproj -c Release
+
+      - name: Source contracts and replay model
+        shell: pwsh
+        run: |
+          python tests/portable/check18.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/portable/sim.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: WPF UI smoke tests
+        shell: pwsh
+        run: |
+          dotnet build tests/PodsView.UiSmoke/PodsView.UiSmoke.csproj -c Release -r win-x64 --self-contained true --no-incremental --output .build/ci-ui
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet .build/ci-ui/PodsView.UiSmoke.dll ui-smoke-evidence
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-evidence
+          path: ui-smoke-evidence
+          if-no-files-found: ignore
+
+      - name: Publish win-x64
+        run: >
+          dotnet publish src/PodsView/PodsView.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=false
+          -p:DebugType=None
+          -o publish/win-x64
+
+      - name: Build installer (proves the release path compiles)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Qp installer/DeskPods.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem dist
+
+      - name: Upload installer for manual testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: deskpods-setup
+          path: dist/*.exe

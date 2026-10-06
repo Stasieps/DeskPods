@@ -1,0 +1,33 @@
+name: Bug report / Помилка
+description: Something doesn't work as expected / Щось працює не так
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Що сталося?
+      placeholder: "I opened the case and the card did not show up... / Відкрив кейс, а картка не зʼявилась..."
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Headphones / Навушники
+      placeholder: AirPods Pro 2
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: DeskPods version / Версія DeskPods
+      placeholder: "0.8.46"
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version / Версія Windows
+      placeholder: Windows 11 23H2
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Логи
+      description: "Settings → Diagnostics → Export logs (zip), then drag the file here. / Налаштування → Діагностика → Експорт логів (zip), і перетягни файл сюди."

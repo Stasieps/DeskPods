@@ -1,0 +1,27 @@
+# PodsView replay fixture - recorded air, not invented numbers.
+# Source: %LOCALAPPDATA%\PodsView\Logs\podsview-trace.log, session 0.8.8, 2026-08-29.
+# Lines: <p|s> <t_ms> <address> <rssi> <ageMs> <trusted> <bound> <manufacturer payload hex>
+#   p = logged exactly as it arrived.
+#   s = suspect: a packet the filter dropped, so the log kept no payload of its own. The lid
+#       byte is real, the rest of the payload is copied from the packet before it. A suspect
+#       line is never counted as something that physically happened - it is here to prove it
+#       changes nothing.
+# sim.py and the C# smoke test both replay these through the real parser, the real filter and
+# the real state machine and check the timings below. Regenerated from the log, do not edit.
+#
+# A plain opening and closing with nothing else going on. The floor of the whole app.
+#
+!name 01-open-instant
+!window 21:43:26 - 21:43:28.900000
+!paired 1
+!connected 0
+!nearby 1
+!expect shows 1
+!expect hides 1
+!expect show-within-ms 250
+!expect hide-within-ms 250
+p 0 612F4B9CE3B6 -68 1 1 1 0719011420739A93320005D6F9B2C28FEEF164968907CD77346BE4
+p 1792 612F4B9CE3B6 -62 1 1 1 0719011420739A933A0005BD8D006C843A572C6448117F478B4C81
+p 2125 612F4B9CE3B6 -63 1 1 1 0719011420739A933A0005BD8D006C843A572C6448117F478B4C81
+p 2260 612F4B9CE3B6 -76 1 1 1 0719011420739A933A0005BD8D006C843A572C6448117F478B4C81
+p 2360 612F4B9CE3B6 -67 1 1 1 0719011420739A933A0005BD8D006C843A572C6448117F478B4C81

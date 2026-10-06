@@ -1,0 +1,48 @@
+name: Bump version
+
+# Push a branch named version/X.Y.Z and this workflow makes X.Y.Z the one
+# version number the whole repository agrees on: VERSION plus every anchor
+# listed in .github/scripts/deskpods_version.py. Nothing else has to be edited
+# by hand, and the branch check then runs against the corrected commit.
+
+on:
+  push:
+    branches:
+      - 'version/**'
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Write the version everywhere
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Take the number from the branch name
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#version/}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Branch must be named version/X.Y.Z, got $GITHUB_REF_NAME"
+            exit 1
+          fi
+          printf '%s\n' "$version" > VERSION
+          python3 .github/scripts/deskpods_version.py --apply
+          python3 .github/scripts/deskpods_version.py --check
+
+      - name: Commit the corrected files
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "Everything already carries this version."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -am "Set version ${GITHUB_REF_NAME#version/} everywhere"
+          git push
