@@ -45,9 +45,9 @@ internal static class CoreRegressions
         check(pods.Data?.LeftBattery == 80 && !pods.Data.LeftCached, "Live earbud marked as remembered");
         pods.Apply(live with { Data = data with { RightBattery = null }, DeviceKey = "other/00", ReceivedAt = origin.AddHours(4) });
         check(pods.Data?.RightBattery is null, "Another pair inherited the earbud charge");
-        var restored = new BatteryMemory();
-        restored.Seed(40, "pro/00", 60, 30, "pro/00");
-        check(restored.Data is { LeftBattery: 60, RightBattery: 30, LeftCached: true, RightCached: true }, "Earbud charges not restored at start");
+        var restoredPods = new BatteryMemory();
+        restoredPods.Seed(40, "pro/00", 60, 30, "pro/00");
+        check(restoredPods.Data is { LeftBattery: 60, RightBattery: 30, LeftCached: true, RightCached: true }, "Earbud charges not restored at start");
         var foreign = new BatteryMemory();
         foreign.Seed(40, "pro/00", 60, 30, "other/00");
         check(foreign.LastLeft is null && foreign.LastRight is null, "Earbud charges of another pair restored");
