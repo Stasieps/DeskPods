@@ -3,13 +3,13 @@ using System.Linq;
 namespace PodsView;
 
 /// <summary>
-/// Seven interchangeable looks. A theme swaps the palette, the accent and the dot
+/// Eight interchangeable looks. A theme swaps the palette, the accent and the dot
 /// pattern only: the measured geometry stays untouched, so no layout can break.
 ///
 /// 0.8.18 adds two things. The popup card, its rim and its glow are palette entries
 /// now - they used to be literals inside CasePopupWindow.xaml, so a theme switch
-/// repainted the dots while the card stayed black (the "old dots stay on that
-/// window" report). And <see cref="Changed"/> lets an open window repaint the
+/// repainted the dots while the card stayed black (and old dots stayed on that
+/// window). And <see cref="Changed"/> lets an open window repaint the
 /// brushes it sets from code instead of waiting for the next packet.
 /// </summary>
 internal static class ThemeManager

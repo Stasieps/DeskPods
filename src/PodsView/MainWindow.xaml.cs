@@ -127,7 +127,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// 0.8.22: three numbers and nothing around them. The captions over the bars and
-    /// the freshness line in the corner were both added without being asked for, and
+    /// the freshness line in the corner were both unnecessary, and
     /// the code behind them - the tracking helper, the case staleness clock and the
     /// packet clock - left with them.
     /// </summary>

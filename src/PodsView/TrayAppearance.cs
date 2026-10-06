@@ -6,7 +6,7 @@ namespace PodsView;
 
 internal static class TrayAppearance
 {
-    // 0.8.45: the tray has its own monochrome "dp" glyph (approved variant 13 "speaker mesh").
+    // 0.8.45: the tray has its own monochrome "dp" glyph ("speaker mesh" style).
     // The desktop/app logo (deskpods.ico, DeskPods.Brand.Icon) is unchanged. Because the glyph is
     // monochrome it follows the taskbar tone: white on a dark taskbar, dark on a light taskbar.
     // Battery/connection state never replaces the glyph.

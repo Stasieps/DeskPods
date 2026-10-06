@@ -504,7 +504,7 @@
         </Style>
 
         <!-- ==================== Dropdown ====================
-             The one the user asked about for months: picking a language or a theme
+             Picking a language or a theme
              opened the stock Windows list, which is white text-on-white on every
              dark theme because only the closed box was ever styled. Button, popup,
              rows and scrollbar are all ours now, all on theme brushes. -->

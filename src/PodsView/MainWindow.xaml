@@ -64,8 +64,8 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Body: the real photo of the case on the left (the one from the repo,
-                     variant A), three channels on the right. Geometry is the measured
+                <!-- Body: the real photo of the case on the left, three channels on the
+                     right. Geometry is the measured
                      compact tile; only the value column grew to fit "80-89 %". -->
                 <Grid x:Name="AppearanceBody" Grid.Row="1" Margin="0,2,0,0">
                     <Grid.ColumnDefinitions>

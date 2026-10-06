@@ -31,7 +31,7 @@ namespace PodsView;
 /// That last rule matters as much as the others. The state machine is fed by a stream and
 /// hides the popup when the case goes quiet, so if only the transitions reached it, a lid
 /// held open would look like silence and the popup would vanish by itself after ten
-/// seconds - which is precisely the 20:52:36 complaint. A frozen stream never earns
+/// seconds - exactly what the 20:52:36 capture shows. A frozen stream never earns
 /// confirmation, so it still says nothing at all.
 ///
 /// <para>
@@ -75,8 +75,8 @@ namespace PodsView;
 /// carry trust far: bytes 6 and 7 hold the two earbud batteries and the case battery, so it
 /// changes when the case discharges by ten percent and again when an earbud is taken out of
 /// the case. Trust was therefore almost never in place at the moment it was needed, and the
-/// capture of 2026-08-30 17:15-17:23 shows what that costs - all three of the user's
-/// complaints are one and the same event, the first packet of a new address being discarded:
+/// capture of 2026-08-30 17:15-17:23 shows what that costs - all three late or missing popups
+/// are one and the same event, the first packet of a new address being discarded:
 /// </para>
 ///
 ///     17:19:34.589  540697  lid 0x51 open  baseline  ignored -> popup only at 17:19:39.201
@@ -166,7 +166,7 @@ internal sealed class LidSignal
 	/// <see cref="UsedAt"/> is what freshness is measured from, and until 0.8.20 it did not
 	/// exist: a signature kept the time of its first lesson for ever, so a case that had been
 	/// using it all day still lost the first word of its next address twelve hours in. That is
-	/// the report "it will not pop on the first try, only when I open the case a second time":
+	/// why it would not pop on the first try, only when the case was opened a second time:
 	/// the discarded word is the lid being opened, and the second opening only works because by
 	/// then the address is in the table and its changed byte counts as an event.
 	/// </summary>
@@ -251,7 +251,7 @@ internal sealed class LidSignal
                     // that shape then walked straight in as "known". A frozen copy shares
                     // model and colour with the real case, so it could inherit the entry and
                     // raise a popup on nothing. Teaching stays with explicit, change and
-                    // rotate-change, exactly as the 0.8.37 handoff asked.
+                    // rotate-change, as intended since 0.8.37.
                 }
 				else if (!known && trustedIdentity)
 			{

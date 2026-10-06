@@ -70,8 +70,8 @@ public partial class App : System.Windows.Application
     /// <summary>
     /// 0.8.17: the radio goes first. Measured on the six sessions of 0.8.12-0.8.15, the BLE
     /// watcher only started 602, 1016, 3303, 1135, 633 and 1769 ms after launch, and until it
-    /// runs the app is deaf: a case opened in that window is never heard, which is the report
-    /// "I start the app, open the case, and the popup comes late". Between the header and the
+    /// runs the app is deaf: a case opened in that window is never heard, so right after start-up
+    /// the popup came late. Between the header and the
     /// watcher stood the theme, the main window, the tray and the single-instance event -
     /// 408, 833, 2533, 956, 439 and 1216 ms of work no packet needs.
     ///
@@ -510,7 +510,7 @@ public partial class App : System.Windows.Application
         // out-of-order packet is normal. Returning here threw that packet away before the
         // lid state machine ever saw it: an out-of-order OPEN meant no popup at all, an
         // out-of-order CLOSE meant the card hung until the silence timeout. That is the
-        // "sometimes it works, sometimes it does not" report. The cache still ignores the
+        // "sometimes it works, sometimes it does not" behaviour. The cache still ignores the
         // stale reading; only the lid path is now independent of it.
         _batteryMemory.Apply(packet);
         if (_batteryMemory.Data is null) return;

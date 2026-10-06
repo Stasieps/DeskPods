@@ -8,7 +8,7 @@ namespace PodsView;
 //
 // 0.8.35 and 0.8.37 close the measured hole that kept the first opening off the
 // screen, and 0.8.37 removes the part of 0.8.35 that the real .NET gate rejected.
-// The user's own 2026-09-08 11:58:33 session is the evidence:
+// A recorded 2026-09-08 11:58:33 session is the evidence:
 //
 //   11:59:14.249  peer 4  lidByte 0x51  shape 0x4D  open, cycle 1  -> baseline, DISCARDED
 //   11:59:14.348  peer 4  lidByte 0x51  shape 0x4D  open, cycle 1  -> static,   DISCARDED

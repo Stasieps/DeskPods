@@ -489,7 +489,7 @@ internal sealed class HotkeyService : IDisposable
 /// 0.8.18 shipped font tokens that named optional families - "Cascadia Mono" and
 /// "Segoe UI Variable Text" are Windows 11 extras. On a machine without them WPF
 /// walks the fallback list silently, lands on the system default, and the change is
-/// invisible: exactly the "the fonts are not different" report. Guessing which fonts
+/// invisible: the fonts simply look the same. Guessing which fonts
 /// a machine has is the same mistake as guessing what the radio said, so this probes
 /// the installed set, writes the winner into the same resource keys, and logs it.
 /// The log line is the proof of what is on screen.

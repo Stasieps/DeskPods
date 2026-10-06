@@ -312,7 +312,7 @@ for name in FROZEN:
 # 0.8.20 changes LidSignal on purpose. A learned signature used to keep the time of its
 # first lesson for ever, so twelve hours into a session it went cold even though the case
 # had been leaning on it all along - and the first word of the next address was discarded.
-# That is the report "it will not pop on the first try, only on the second". A file allowed
+# That is why it did not pop on the first try, only on the second. A file allowed
 # to move must still be held to the rule that moved it, so the gate checks the rule.
 lid_signal = sources["LidSignal.cs"]
 # Intentional R3 fix: strict per-address expiry and dated shape persistence.
@@ -491,7 +491,7 @@ for key in ["updated", "dataAge", "ago"]:
     check(f'["{key}"]=' not in localization, f"the dead key {key} is still translated")
 
 # The pill keeps its opaque fill: reading a build number through a texture is the
-# complaint that started 0.8.21.
+# problem that started 0.8.21.
 check('x:Key="VersionChip"' in app_xaml, "there is no version pill style")
 chip = re.search(r'<Style x:Key="VersionChip".*?</Style>', app_xaml, re.S)
 check(chip is not None, "the version pill style is unreadable")

@@ -8,7 +8,7 @@ AirPods Pro 2) contained two transmitters sharing one identity:
     case     lid byte 0x3X, bursts at about 8 Hz, bit 3 is the lid,
              bits 0-2 a counter incremented on every opening
 
-Every scenario below asserts the two things the user asked for: the popup appears
+Every scenario below asserts the two things that matter: the popup appears
 the moment the lid opens, and it never comes back on its own once the lid is shut.
 """
 import random
@@ -856,8 +856,8 @@ check(learn.believe(0x2222, 0x735796, 0x51, 2.0) == (True, 'known'), 'the shape 
 check(learn.believe(0x3333, 0x735796, 0x51, 2.0 + SHAPE_TTL + 1) == (False, 'baseline'),
       'a signature older than SHAPE_TTL is not believed')
 
-# ---- the report of 2026-09-03: the first opening after a pause does nothing ----
-# "it will not pop on the first try, only when I open the case a second time".
+# ---- 2026-09-03: the first opening after a pause does nothing ----
+# It would not pop on the first try, only when the case was opened a second time.
 #
 # A signature is learned once and keeps the time of that first lesson for ever, because
 # refreshing it would reorder the saved list. So an app that has been running since the

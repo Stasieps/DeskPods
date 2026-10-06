@@ -3,8 +3,8 @@ using PodsView;
 // 0.8.35 - the first opening of a session.
 //
 // A static text check cannot prove a capacity bug, so these regressions drive the real
-// signature table and the real classifier. The measurement they defend comes from the
-// user's 2026-09-08 trace: one AirPods Pro 2 case announced six different signatures in
+// signature table and the real classifier. The measurement they defend comes from a
+// recorded 2026-09-08 trace: one AirPods Pro 2 case announced six different signatures in
 // a single afternoon (0x39, 0x3A, 0x3D, 0x3E, 0x49, 0x4D), because the low nibble of the
 // shape is the charge nibble and it moves every time the lid moves. The table held four.
 internal static class Release35Regressions
