@@ -28,8 +28,11 @@ SRC = os.path.join(ROOT, "src", "PodsView")
 # read() below returns them (UTF-8, newlines normalised by Python). Any edit to a
 # lid, filter or parser file moves its digest and stops the patch here.
 FROZEN_DIGESTS = {
-    "LidStateMachine.cs": "b5c504f6bb7a113014012d4f190bb516f066ed15f30581556028b21bc480041f",
-    "DeviceTracker.cs": "6e48de380cf41312babb848eff7ddace9da9bdbf94fdb6f72a89eefcc8c1f79b",
+    # 0.8.47: re-hashed after rewording one doc comment in each of these two files.
+    # Comment lines only (git diff of 0.8.46..0.8.47 touches nothing but /// lines);
+    # the code, timings and bindings are the reviewed 0.8.37 contract unchanged.
+    "LidStateMachine.cs": "be837494075df2408a56698e359adde255c1a814dda698e03cd5435dfc8e7773",
+    "DeviceTracker.cs": "32adc08d97bb2b0694b4e3bb30a85142cf59dd6309b545a5e0efb1fccb340c73",
     "PacketFilter.cs": "fd08e90ec66cce52a6886e90b1b50b112b66000275d6c217194b5a02d9fe3a1c",
     "BluetoothMonitor.cs": "4e94a573c728370c98e9317efcbb35a2b3e98458aa156a0e109b2bd1ec1f9676",
     "AirPodsAdvertisementParser.cs": "43e45cfc6cfcdf24a2b2f41d9bc999bddce51eff3bf622ce5c5c6cb41015cd78",
@@ -648,6 +651,9 @@ check("UpdateRelease.cs" in read(ROOT, "tests", "PodsView.ParserSmoke", "PodsVie
 check("TrustedDownload" in upd and "Uri.UriSchemeHttps" in upd, "the updater accepts non-GitHub or non-HTTPS downloads")
 check("'M'" in upd and "'Z'" in upd, "the updater runs a download without checking it is an executable")
 check("/SILENT" in upd and "IsInstalledCopy" in upd, "the updater does not install silently or replaces portable copies")
+# 0.8.47: the setup must hash to the SHA-256 GitHub publishes with the asset.
+check('"digest"' in upd and "SHA256.HashData" in upd and "UpdateRelease.DigestAccepts(info.InstallerSha256, hash)" in upd, "the updater runs a setup without checking its published SHA-256")
+check("UpdateRelease.DigestAccepts(" in read(ROOT, "tests", "PodsView.ParserSmoke", "CoreRegressions.cs") and "UpdateRelease.Sha256Hex(" in read(ROOT, "tests", "PodsView.ParserSmoke", "CoreRegressions.cs"), "the SHA-256 check is not covered by the parser smoke tests")
 check("Check: WizardSilent" in read(ROOT, "installer", "DeskPods.iss"), "a silent update does not restart DeskPods")
 check("CheckForUpdates" in sources["AppSettings.cs"] and "UpdatesCheckBox" in sources["SettingsWindow.xaml"], "update checks cannot be switched off")
 check("if (Settings.CheckForUpdates) CheckForUpdates(manual: false)" in sources["App.xaml.cs"], "automatic checks ignore the setting")

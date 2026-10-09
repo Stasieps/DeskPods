@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace PodsView;
@@ -45,6 +46,11 @@ internal static class UpdateService
         if (!UpdateRelease.TrustedDownload(info.InstallerUrl)) throw new InvalidOperationException("The release has no installer");
         string folder = Path.Combine(Path.GetTempPath(), "DeskPods-update");
         Directory.CreateDirectory(folder);
+        // 0.8.47: setups of earlier updates (about 75 MB each) are not left piling up in %TEMP%.
+        foreach (string old in Directory.GetFiles(folder, "DeskPods_Setup_v*"))
+        {
+            try { File.Delete(old); } catch { }
+        }
         string target = Path.Combine(folder, $"DeskPods_Setup_v{info.Display}.exe");
         string partial = target + ".part";
 
@@ -76,6 +82,19 @@ internal static class UpdateService
             if (check.Length < 512 * 1024 || check.Read(bytes, 0, 2) != 2 || bytes[0] != (byte)'M' || bytes[1] != (byte)'Z')
                 throw new InvalidDataException("The downloaded file is not a setup program");
         }
+
+        // 0.8.47: the file on disk must be exactly the asset GitHub published - same SHA-256 -
+        // or it is deleted instead of being run.
+        byte[] hash;
+        using (var stream = File.OpenRead(partial)) hash = SHA256.HashData(stream);
+        if (!UpdateRelease.DigestAccepts(info.InstallerSha256, hash))
+        {
+            try { File.Delete(partial); } catch { }
+            throw new InvalidDataException("The downloaded setup does not match the SHA-256 published with the release");
+        }
+        Logger.Info(info.InstallerSha256 is null
+            ? $"Update v{info.Display}: the release publishes no SHA-256, the setup passed the executable checks"
+            : $"Update v{info.Display}: setup SHA-256 matches the release");
         File.Move(partial, target, overwrite: true);
         return target;
     }

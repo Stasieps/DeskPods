@@ -104,8 +104,8 @@ public sealed class LidStateMachine
     /// session on 2026-08-30: in eight of them the first word said "open" and the popup was
     /// instant; in the other five it said "closed" and the popup had to wait for the next
     /// real opening - 0.5 s, 0.9 s, 1.3 s, and 4.7 s after the case had been silent for 108
-    /// minutes. That last one is the report "I open it and nothing happens, I close it and
-    /// open it again and it works": at 20:57:08 the case answered its wake-up with the state
+    /// minutes. That last one is the case where opening shows nothing until the lid is shut
+    /// and opened once more: at 20:57:08 the case answered its wake-up with the state
     /// it had before falling asleep - lid byte 0x58, counter 0 - and the true 0x52 only
     /// arrived 4.7 s later, after a second lid movement by hand.
     ///
