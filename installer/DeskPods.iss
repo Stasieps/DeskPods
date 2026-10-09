@@ -11,7 +11,7 @@
 ;     %LOCALAPPDATA%\PodsView and is never touched by install or uninstall.
 
 #define MyAppName "DeskPods"
-#define MyAppVersion "0.8.46"
+#define MyAppVersion "0.8.47"
 #define MyAppPublisher "DeskPods"
 #define MyAppURL "https://github.com/Stasieps/DeskPods"
 #define MyAppExeName "PodsView.exe"

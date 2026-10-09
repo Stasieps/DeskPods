@@ -11,7 +11,7 @@
     <RootNamespace>PodsView</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\deskpods.ico</ApplicationIcon>
-    <Version>0.8.46</Version>
+    <Version>0.8.47</Version>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <Company>DeskPods</Company>
     <Product>DeskPods</Product>
