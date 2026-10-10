@@ -175,17 +175,20 @@ Expect(watchdog.Handle(true, true, 3, caseAddr, At(0)) == LidAction.None, "Watch
 Expect(watchdog.Handle(true, true, 3, caseAddr, At(0.2)) == LidAction.Open, "Watchdog fixture opens");
 Expect(!watchdog.ShouldTimeout(At(3.5)), "The watchdog must not fire while the stream is alive");
 Expect(watchdog.Handle(true, true, 3, caseAddr, At(3.5)) == LidAction.Update, "The stream keeps the popup alive");
+// 0.8.47: the case said its piece inside the first 20 s, so the quiet tail is
+// 6 s (it used to be 10 s): the card goes away soon after the case falls quiet.
 Expect(!watchdog.ShouldTimeout(At(9)), "A case that pauses for a few seconds must keep its popup");
-Expect(!watchdog.ShouldTimeout(At(13)), "A fresh packet must postpone the timeout");
-Expect(watchdog.ShouldTimeout(At(14)), "Ten silent seconds finally take the popup down");
-watchdog.SuspendForSilence(At(14));
+Expect(!watchdog.ShouldTimeout(At(9.4)), "A fresh packet must postpone the timeout");
+Expect(watchdog.ShouldTimeout(At(9.6)), "Six quiet seconds take the popup down");
+watchdog.SuspendForSilence(At(9.6));
 Expect(!watchdog.IsOpen, "Silence must leave the machine closed");
-Expect(watchdog.IsSuspended, "Silence must leave the cycle resumable, not buried");
+Expect(watchdog.IsSuspended, "Silence must mark the cycle as spent");
 
-// The lid never moved, so that same cycle must be able to come straight back.
-Expect(watchdog.Handle(true, true, 3, caseAddr, At(20)) == LidAction.None, "A resuming burst arms");
-Expect(watchdog.Handle(true, true, 3, caseAddr, At(20.15)) == LidAction.Open, "A case that is still open must get its popup back");
-Expect(!watchdog.IsSuspended, "Resuming must clear the suspension");
+// 0.8.47: no pop-back. A case left lying open keeps talking in bursts; the card
+// already showed for this cycle, so those bursts may not bring it back again.
+Expect(watchdog.Handle(true, true, 3, caseAddr, At(20)) == LidAction.None, "A later burst of a spent cycle stays quiet");
+Expect(watchdog.Handle(true, true, 3, caseAddr, At(20.15)) == LidAction.None, "0.8.47: no pop-back for a case lying open");
+Expect(watchdog.IsSuspended, "The spent mark must survive the bursts");
 
 // A lone stale packet is not a burst and may never resurrect a suspended cycle.
 var lonely = new LidStateMachine();
@@ -197,7 +200,8 @@ for (int i = 1; i <= 30; i++)
 
 // The close button, however, still ends the cycle for good.
 watchdog.ForceClosed(At(21));
-Expect(!watchdog.IsOpen && !watchdog.IsSuspended, "ForceClosed must bury the cycle, not suspend it");
+// 0.8.47: closing by hand also marks the cycle as spent (by hand), so it stays buried.
+Expect(!watchdog.IsOpen && watchdog.IsSuspended, "ForceClosed must bury the cycle as spent by hand");
 for (int i = 1; i <= 60; i++)
     Expect(watchdog.Handle(true, true, 3, caseAddr, At(21 + i * 0.15)) == LidAction.None, $"Packet {i} of a dismissed cycle came back");
 Expect(watchdog.Handle(true, true, 4, caseAddr, At(40)) == LidAction.None, "A genuinely new cycle arms");

@@ -123,7 +123,7 @@ public sealed class DeviceTracker
 ///
 /// The published Continuity notes say 1 means open, the packets this app was built
 /// against behaved the other way round, and a wrong guess produces exactly the two
-/// complaints that would not go away: a popup that appears late and one that appears
+/// worst failures there are: a popup that appears late and one that appears
 /// on its own. Rather than guess, this listens: only an open case streams for many
 /// seconds without a break, so whichever value dominates long streams is "open".
 /// </summary>

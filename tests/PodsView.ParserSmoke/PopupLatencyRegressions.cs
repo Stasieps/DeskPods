@@ -59,8 +59,10 @@ internal static class PopupLatencyRegressions
         var resume = new LidStateMachine();
         check(resume.Handle(true,true,1,1,t,provenFresh:true) == LidAction.Open,"Resume fixture did not open");
         resume.SuspendForSilence(t.AddSeconds(6));
-        check(resume.Handle(true,true,1,1,t.AddSeconds(30),provenFresh:true) == LidAction.Open,
-            "Proven-fresh suspended cycle waited for another packet");
+        // 0.8.47: no pop-back. A cycle that silence took off the screen is spent; its lid is
+        // very probably still open, so even a fresh word of it may not raise the card again.
+        check(resume.Handle(true,true,1,1,t.AddSeconds(30),provenFresh:true) == LidAction.None,
+            "A silence-hidden cycle re-popped (0.8.47: no pop-back)");
         resume.ForceClosed(t.AddSeconds(31));
         check(resume.Handle(true,true,1,1,t.AddSeconds(32),provenFresh:true) == LidAction.None,
             "Fresh resume change bypassed manual dismissal");
@@ -69,25 +71,43 @@ internal static class PopupLatencyRegressions
         check(uncertain.Handle(true,true,1,1,t.AddSeconds(30)) == LidAction.None,"Unproven resume bypassed burst proof");
 
         var wake = new LidStateMachine();
-        wake.Handle(true,false,1,1,t,provenFresh:true);
+        // 0.8.47: the case's first word since start breaks an unknown silence, so it is a wake.
+        check(wake.Handle(true,false,1,1,t,provenFresh:true)==LidAction.Open,"First word since start did not wake (wake)");
+        check(!wake.ShouldTimeout(t.AddSeconds(6)) && wake.ShouldTimeout(t.AddSeconds(6.1)),"Unconfirmed wake ignored the 6 s quiet (wake)");
+        wake.EndUnconfirmedWake(t.AddSeconds(6.1));
         check(wake.Handle(true,false,1,1,t.AddSeconds(30),provenFresh:true)==LidAction.Open,"Wake fixture did not open");
         wake.Handle(true,true,2,1,t.AddSeconds(30.1),provenFresh:true);
         check(!wake.HoldsClosedWord(t.AddSeconds(30.2)),"Confirmed opening retained the wake floor");
         check(wake.Handle(true,false,2,1,t.AddSeconds(30.2),provenFresh:true)==LidAction.Close,
             "Confirmed real close waited for the 1500 ms wake floor");
         var changedClose = new LidStateMachine();
-        changedClose.Handle(true,false,1,1,t,provenFresh:true);
+        // 0.8.47: the case's first word since start breaks an unknown silence, so it is a wake.
+        check(changedClose.Handle(true,false,1,1,t,provenFresh:true)==LidAction.Open,"First word since start did not wake (changedClose)");
+        check(!changedClose.ShouldTimeout(t.AddSeconds(6)) && changedClose.ShouldTimeout(t.AddSeconds(6.1)),"Unconfirmed wake ignored the 6 s quiet (changedClose)");
+        changedClose.EndUnconfirmedWake(t.AddSeconds(6.1));
         changedClose.Handle(true,false,1,1,t.AddSeconds(30),provenFresh:true);
         check(changedClose.Handle(true,false,2,1,t.AddSeconds(30.2),provenFresh:true)==LidAction.Close,
             "Different-cycle close was hidden by the provisional wake floor");
         var repeats = new LidStateMachine();
-        repeats.Handle(true,false,1,1,t,provenFresh:true);
+        // 0.8.47: the case's first word since start breaks an unknown silence, so it is a wake.
+        check(repeats.Handle(true,false,1,1,t,provenFresh:true)==LidAction.Open,"First word since start did not wake (repeats)");
+        check(!repeats.ShouldTimeout(t.AddSeconds(6)) && repeats.ShouldTimeout(t.AddSeconds(6.1)),"Unconfirmed wake ignored the 6 s quiet (repeats)");
+        repeats.EndUnconfirmedWake(t.AddSeconds(6.1));
         repeats.Handle(true,false,1,1,t.AddSeconds(30),provenFresh:true);
         check(repeats.Handle(true,false,1,1,t.AddSeconds(30.2),provenFresh:true)==LidAction.Update,
             "Repeated stale wake snapshot prematurely hid the popup");
+        // 0.8.47: the case's own first word wakes by design (its silence before that is
+        // unknown). A neighbour may neither raise the popup nor touch that silence clock.
         var neighbour = new LidStateMachine();
-        neighbour.Handle(true,false,1,2,t,bound:false,provenFresh:true);
-        check(neighbour.Handle(true,false,1,1,t.AddSeconds(30),provenFresh:true)==LidAction.None,
+        check(neighbour.Handle(true,false,1,2,t,bound:false,provenFresh:true)==LidAction.None && !neighbour.IsOpen,
             "A neighbour manufactured startup silence and a false wake");
+        check(neighbour.Handle(true,false,1,1,t.AddSeconds(30),provenFresh:true)==LidAction.Open && neighbour.LastSilenceMs < 0,
+            "The case's own first word did not wake, or a neighbour started its silence clock");
+        neighbour.EndUnconfirmedWake(t.AddSeconds(36.1));
+        for (int i = 1; i <= 20; i++)
+            check(neighbour.Handle(true,i % 2 == 0,3,2,t.AddSeconds(36 + i * 0.5),bound:false,provenFresh:true)==LidAction.None && !neighbour.IsOpen,
+                $"Neighbour word {i} touched the popup");
+        check(neighbour.Handle(true,false,1,1,t.AddSeconds(46),provenFresh:true)==LidAction.Open && neighbour.LastSilenceMs == 16000,
+            "A neighbour's chatter shortened the case's own silence");
     }
 }

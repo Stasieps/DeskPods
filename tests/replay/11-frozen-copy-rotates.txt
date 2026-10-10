@@ -1,5 +1,10 @@
 !name the frozen copy rotates its address too
-!expect never-show
+# 0.8.47: the case itself (67E7A7D03420, status 0x73: in the case) opens with cycle 2 at
+# 95 ms and shuts it explicitly at 5.04 s - a real open and close, so the card shows once
+# and leaves on the shut word. The frozen copy (status 0x02: an earbud outside the case)
+# is refused as out-of-case and still never raises the popup.
+!expect shows 1
+!expect hides 1
 #
 # cut from podsview-trace.log, session v0.8.10 of 2026-08-29, byte for byte
 # 

@@ -7,7 +7,7 @@ public sealed class AppSettings
 {
     private static readonly object SaveGate = new();
     internal const string DefaultHotkey = "Ctrl+Alt+P";
-    internal static readonly string[] ThemeIds = { "refined", "mono", "glass", "swiss", "terminal", "carbon", "neon", "eink" };
+    internal static readonly string[] ThemeIds = { "refined", "mono", "glass", "swiss", "eink" };
     public bool StartWithWindows { get; set; }
     public bool StartMinimized { get; set; }
     public bool MinimizeToTray { get; set; } = true;
@@ -104,6 +104,8 @@ public sealed class AppSettings
     }
     internal static int? ValidBattery(int? value) => value is >= 0 and <= 100 && value.Value % 10 == 0 ? value : null;
     internal static string NormalizeLanguage(string? value) => value?.ToLowerInvariant() is "ru" or "en" ? value.ToLowerInvariant() : "uk";
+    // 0.8.47: "terminal", "carbon" and "neon" are gone. An old settings file that
+    // still names one of them is not an error - it simply lands on "refined".
     internal static string NormalizeTheme(string? value) => ThemeIds.FirstOrDefault(t => string.Equals(t, value, StringComparison.OrdinalIgnoreCase)) ?? "refined";
     internal static string NormalizeHotkey(string? value) => value?.Trim() ?? DefaultHotkey;
 

@@ -11,8 +11,12 @@
 !connected 0
 !nearby 1
 !shapes 49,39
-!expect shows 1
-!expect hides 1
+# 0.8.47: the first word of the recording is a wake - before the case's first word the
+# silence is unknown, and unknown counts as long, so the first opening after start, boot
+# or unlock shows at once. Here that first word is a shut word, so the card is an
+# unconfirmed wake and leaves 6 s after the case falls quiet: one more show and hide.
+!expect shows 2
+!expect hides 2
 !expect show-after-wake-within-ms 200
 !expect popup-lives-at-least-ms 3000
 p 0 40C5B9EB95A5 -54 1 1 1 07190114207358965B0005855E73B052E5583EFBD022C43AC449CC

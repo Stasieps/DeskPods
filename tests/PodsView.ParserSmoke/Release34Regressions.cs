@@ -6,9 +6,9 @@ internal static class Release34Regressions
     internal static void Run(Action<bool,string> check)
     {
         var t = new DateTimeOffset(2026,9,8,0,0,0,TimeSpan.Zero);
-        ParsedAirPodsData Packet(int shape, byte word)
+        ParsedAirPodsData Packet(int shape, byte word, bool inCase = true)
         {
-            uint id = (uint)((((shape >> 4) | 0x40) << 16) | 0xFA00 | ((shape & 15) << 4) | 3);
+            uint id = (uint)((((shape >> 4) | (inCase ? 0x40 : 0)) << 16) | 0xFA00 | ((shape & 15) << 4) | 3);
             byte[] b = new byte[27]; b[0]=7; b[1]=25; b[2]=1; b[3]=0x14; b[4]=0x20;
             b[5]=(byte)(id>>16); b[6]=(byte)(id>>8); b[7]=(byte)id; b[8]=word;
             check(AirPodsAdvertisementParser.TryParse(b,out var d),"34: synthetic fixture parser");
@@ -31,10 +31,12 @@ internal static class Release34Regressions
         foreach (int seed in new[]{0x39,0x3D,0x49,0x4D})
         {
             var d=Packet(seed^4,0x51);
+            // 0.8.47: fresh:false keeps these two on LidSignal's learned memory alone - a fresh
+            // in-case word of the remembered Pro 2 is believed by the in-case door anyway.
             var stale=new LidSignal(); stale.Seed(seed.ToString("X2"),t);
-            check(!Classify(stale,d,1,t.AddDays(8)),"34: expired charging counterpart revived");
+            check(!Classify(stale,d,1,t.AddDays(8),fresh:false),"34: expired charging counterpart revived");
             var future=new LidSignal(); future.Seed(seed.ToString("X2"),t.AddSeconds(1));
-            check(!Classify(future,d,1,t),"34: future charging counterpart revived");
+            check(!Classify(future,d,1,t,fresh:false),"34: future charging counterpart revived");
             foreach (var flags in new[]{(false,true),(true,false)})
             {
                 var signal=new LidSignal();signal.Seed(seed.ToString("X2"),t);
@@ -87,6 +89,19 @@ internal static class Release34Regressions
 
         // Actual exported sequence/timing/shape/lid words, not recovered private bytes.
         using var doc=JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"replay-safe","22-charging-open-close.json")));
+        // 0.8.47: the export keeps the shape but not the status byte, so every row needs a
+        // modelled status, and since the in-case door believes any fresh in-case word that
+        // choice now matters. Peer 1 never changes its word (0x10: open-looking, counter 0),
+        // and its shape 0x28 is status 0x02 - an earbud OUTSIDE the case - in all 203 raw
+        // packets of tests/replay that carry it. Peers 4, 6 and 7 carry every lid transition,
+        // which per 0.8.41 only packets from inside the case do. So peer 1 is modelled without
+        // bit 6 and refused as out-of-case; the other peers keep bit 6 as before. (Modelled
+        // with bit 6, peer 1's static word would raise the card on the first row.)
+        var transitioning=doc.RootElement.GetProperty("rows").EnumerateArray()
+            .GroupBy(r=>r.GetProperty("peer").GetUInt64())
+            .Where(g=>g.Select(r=>r.GetProperty("lidByte").GetByte()).Distinct().Count()>1)
+            .Select(g=>g.Key).ToHashSet();
+        check(!transitioning.Contains(1UL) && transitioning.Contains(4UL),"34: safe replay peers changed");
         foreach (bool learned in new[]{false,true})
         {
             var signal=new LidSignal();if(learned)signal.Seed("39,49",t);
@@ -94,16 +109,20 @@ internal static class Release34Regressions
             var actions=new Dictionary<int,LidAction>();int total=0;
             foreach(var r in doc.RootElement.GetProperty("rows").EnumerateArray())
             {
-                var d=Packet(r.GetProperty("shape").GetInt32(),r.GetProperty("lidByte").GetByte());
-                var at=t.AddMilliseconds(r.GetProperty("ms").GetDouble());var peer=r.GetProperty("peer").GetUInt64();
+                var peer=r.GetProperty("peer").GetUInt64();
+                var d=Packet(r.GetProperty("shape").GetInt32(),r.GetProperty("lidByte").GetByte(),transitioning.Contains(peer));
+                var at=t.AddMilliseconds(r.GetProperty("ms").GetDouble());
                 bool believed=Classify(signal,d,peer,at);
                 var action=lid.Handle(believed,d.IsCaseOpen,d.LidOpenCounter,peer,at,provenFresh:true,explicitLid:d.CarriesLidState);
                 actions[r.GetProperty("seq").GetInt32()]=action;total++;
             }
             check(total==258,"34: safe replay lost rows");
-            check(actions[36]==(learned?LidAction.Open:LidAction.None),"34: first raw-open outcome");
-            check(actions[42]==(learned?LidAction.Close:LidAction.None),"34: close created false wake");
-            if(!learned)check(actions[45]==LidAction.Open,"34: genuine next-cycle opening suppressed");
+            // 0.8.47: the in-case door believes the very first open word of the charging case
+            // even before its shape is learned - this export is the 0.8.47 evidence, where the
+            // popup used to appear on the close word [42] instead of the opening [36].
+            check(actions[36]==LidAction.Open,"34: first raw-open outcome");
+            check(actions[42]==LidAction.Close,"34: close created false wake");
+            check(actions[45]==LidAction.Open,"34: genuine next-cycle opening suppressed");
         }
         check(DiagnosticSanitizer.Sanitize("2026-09-08 12:00:00.001 case closeEdge=1 addr=PRIVATE")
             =="2026-09-08 12:00:00.001 case closeEdge=1","34: close-edge diagnostic missing/leaking");

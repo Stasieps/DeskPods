@@ -1,11 +1,11 @@
 @echo off
 setlocal DisableDelayedExpansion
 chcp 65001 >nul
-title DeskPods 0.8.46
+title DeskPods 0.8.47
 cd /d "%~dp0"
-set "EXPECTED=0.8.46"
+set "EXPECTED=0.8.47"
 echo.
-echo   DeskPods 0.8.46
+echo   DeskPods 0.8.47
 echo   -------------------------------
 echo   1  Start DeskPods
 echo   2  Install / create desktop shortcut

@@ -28,8 +28,15 @@ SRC = os.path.join(ROOT, "src", "PodsView")
 # read() below returns them (UTF-8, newlines normalised by Python). Any edit to a
 # lid, filter or parser file moves its digest and stops the patch here.
 FROZEN_DIGESTS = {
-    "LidStateMachine.cs": "b5c504f6bb7a113014012d4f190bb516f066ed15f30581556028b21bc480041f",
-    "DeviceTracker.cs": "6e48de380cf41312babb848eff7ddace9da9bdbf94fdb6f72a89eefcc8c1f79b",
+    # 0.8.47: DeviceTracker.cs re-hashed after rewording one doc comment (comment lines
+    # only). LidStateMachine.cs re-hashed because 0.8.47 changes its logic ON PURPOSE:
+    # the case's first word since start/reset wakes (unknown silence counts as long), a
+    # cycle that left the screen without a close is spent (no pop-back), late shut/open
+    # copies are ignored, the lockout covers the same cycle only, the quiet tail is 6 s
+    # and the close button marks its cycle spent. ParserSmoke, sim.py and the replay
+    # fixtures pin that behaviour; this digest freezes the reviewed 0.8.47 text.
+    "LidStateMachine.cs": "5304a327b9750415b76783eb7e818690fd0ea4b654385b30332b298bf92ad2ad",
+    "DeviceTracker.cs": "32adc08d97bb2b0694b4e3bb30a85142cf59dd6309b545a5e0efb1fccb340c73",
     "PacketFilter.cs": "fd08e90ec66cce52a6886e90b1b50b112b66000275d6c217194b5a02d9fe3a1c",
     "BluetoothMonitor.cs": "4e94a573c728370c98e9317efcbb35a2b3e98458aa156a0e109b2bd1ec1f9676",
     "AirPodsAdvertisementParser.cs": "43e45cfc6cfcdf24a2b2f41d9bc999bddce51eff3bf622ce5c5c6cb41015cd78",
@@ -200,12 +207,18 @@ check("internal static event Action? Changed" in theme, "themes cannot notify op
 check("Changed?.Invoke()" in theme, "the theme event is never raised")
 for field in ["PopupCanvas", "PopupRim", "PopupGlow"]:
     check(f'Set(resources, "{field}"' in theme, f"Apply() does not publish {field}")
-# Seven looks, each with its own popup card: 1 default + 6 explicit overrides.
-# One default on the field plus six overrides: mono keeps the field value.
-check(theme.count("PopupCanvas = ") == 8, f"expected 1 default plus 7 popup overrides, found {theme.count('PopupCanvas = ')}")
-check(theme.count("PopupRim = ") == 8, f"expected 1 default plus 7 rim overrides, found {theme.count('PopupRim = ')}")
-check(theme.count("PopupGlow = ") == 8, f"expected 1 default plus 7 glow overrides, found {theme.count('PopupGlow = ')}")
-check(theme.count("new Palette") == 8, f"expected 8 palettes, found {theme.count('new Palette')}")
+# 0.8.47: five looks (TERMINAL, CARBON and NEON were removed), each with its own popup
+# card: one default on the field plus four overrides - mono keeps the field value.
+check(theme.count("PopupCanvas = ") == 5, f"expected 1 default plus 4 popup overrides, found {theme.count('PopupCanvas = ')}")
+check(theme.count("PopupRim = ") == 5, f"expected 1 default plus 4 rim overrides, found {theme.count('PopupRim = ')}")
+check(theme.count("PopupGlow = ") == 5, f"expected 1 default plus 4 glow overrides, found {theme.count('PopupGlow = ')}")
+check(theme.count("new Palette") == 5, f"expected 5 palettes, found {theme.count('new Palette')}")
+palette_ids = re.findall(r'new Palette\s*\{\s*Id = "([a-z]+)"', theme)
+setting_ids = re.findall(r'"([a-z]+)"', re.search(r'ThemeIds = \{([^}]*)\}', sources["AppSettings.cs"]).group(1))
+check(palette_ids == setting_ids, f"theme ids differ: palettes {palette_ids}, settings {setting_ids}")
+for gone in ["terminal", "carbon", "neon"]:
+    check(gone not in palette_ids and gone not in setting_ids, f"the removed theme {gone} is still offered")
+check("eink" in palette_ids and "4  E-INK  (paper)" in theme, "the E-INK theme is missing or misnumbered")
 check("value.Length == 8" in theme, "the palette parser cannot read the popup opacity")
 check('resources["ProductGlow"] = BuildGlow' in theme, "the halo behind the photo is not theme aware")
 
@@ -617,7 +630,11 @@ check("if (!_pairingCatalogReady && !StartupEligibility.CanProcess" in monitor28
 check("ProcessObservation(observation)" in monitor28 and "observation.RadioAgeMs + waited" in monitor28, "Buffered observations bypass guards or gain freshness")
 check("_latest[observation.Address] = observation" in startup_buffer, "Startup buffer replays superseded lid states")
 check("Capacity = 24" in startup_buffer and "TimeSpan.FromSeconds(2)" in startup_buffer, "Startup buffer lost its capacity/age limits")
-check("if (provenFresh && (resuming || !echoOfClosedCycle || idleReopen))" in lid28, "Fresh resumptions still wait for another packet")
+# 0.8.47: no resume door any more - a spent cycle stays down; a fresh new opening shows at once.
+check("if (provenFresh && (!echoOfClosedCycle || idleReopen))" in lid28, "Fresh openings still wait for another packet")
+check("if (spent)" in lid28 and "MarkSpent(_liveCycle, _liveAddress, now, byHand: true)" in lid28 and "MarkSpent(_liveCycle, _liveAddress, now, byHand: false)" in lid28, "a cycle that left the screen can pop back")
+check('LastBlockReason = "late shut word, cycle "' in lid28 and 'LastBlockReason = "late open word, cycle "' in lid28, "late copies can flicker the card")
+check("TimeSpan sinceCase = heardBefore ? now - _lastCaseAt : TimeSpan.MaxValue;" in lid28, "the first word after start, boot or unlock cannot wake the card")
 check("_wakeUnconfirmed && cycle == _wakeCycle && _wakeOpenedAt != default" in lid28, "Wake floor still blocks changed-cycle closes")
 check("_wakeUnconfirmed = false;\n            _wakeOpenedAt = default;\n            _wakeCycle = -1;" in lid28, "Open confirmation does not clear the provisional floor")
 check("neighbour manufactured startup silence" in latency_tests and "Fresh resume change bypassed manual dismissal" in latency_tests, "Latency changes lack negative regressions")
@@ -636,7 +653,8 @@ check("saved.LastRightBattery" in sources["MainWindow.xaml.cs"], "the window doe
 check("LowBatteryPulse.Set(low" in sources["MainWindow.xaml.cs"], "the low row in the window does not blink")
 check("LowBatteryPulse.Set(low" in sources["CasePopupWindow.xaml.cs"], "the low channel on the card does not blink")
 check('"lowBatteryHeader"' in sources["CasePopupWindow.xaml.cs"] and "_alertKey" in sources["CasePopupWindow.xaml.cs"], "the low-battery card does not name its reason")
-check('ShowCardManually(low.Key)' in sources["App.xaml.cs"] and '"lowBatteryBody"' in sources["App.xaml.cs"], "the low-battery alert does not explain itself")
+# 0.8.47: the low-battery alert is a balloon only - it no longer pops the card by itself.
+check('ShowCardManually(low.Key)' not in sources["App.xaml.cs"] and '"lowBatteryBody"' in sources["App.xaml.cs"], "the low-battery alert pops the card by itself or does not explain itself")
 for key in ["lowBatteryHeader", "lowBatteryReason", "lowBatteryBody", "updateInstall", "updateCheck", "updateTitle", "updateBody", "updateButton", "updateFailed", "updatesSetting", "updatesSettingHint", "updateDownloading", "updateLatest", "updateCheckFailed", "updateHint"]:
     check(sources["Localization.cs"].count('["' + key + '"]') == 3, "localization key missing in a language: " + key)
 # 0.8.46: updates from GitHub Releases, one click, switchable.
@@ -648,10 +666,33 @@ check("UpdateRelease.cs" in read(ROOT, "tests", "PodsView.ParserSmoke", "PodsVie
 check("TrustedDownload" in upd and "Uri.UriSchemeHttps" in upd, "the updater accepts non-GitHub or non-HTTPS downloads")
 check("'M'" in upd and "'Z'" in upd, "the updater runs a download without checking it is an executable")
 check("/SILENT" in upd and "IsInstalledCopy" in upd, "the updater does not install silently or replaces portable copies")
+# 0.8.47: the setup must hash to the SHA-256 GitHub publishes with the asset.
+check('"digest"' in upd and "SHA256.HashData" in upd and "UpdateRelease.DigestAccepts(info.InstallerSha256, hash)" in upd, "the updater runs a setup without checking its published SHA-256")
+check("UpdateRelease.DigestAccepts(" in read(ROOT, "tests", "PodsView.ParserSmoke", "CoreRegressions.cs") and "UpdateRelease.Sha256Hex(" in read(ROOT, "tests", "PodsView.ParserSmoke", "CoreRegressions.cs"), "the SHA-256 check is not covered by the parser smoke tests")
 check("Check: WizardSilent" in read(ROOT, "installer", "DeskPods.iss"), "a silent update does not restart DeskPods")
 check("CheckForUpdates" in sources["AppSettings.cs"] and "UpdatesCheckBox" in sources["SettingsWindow.xaml"], "update checks cannot be switched off")
 check("if (Settings.CheckForUpdates) CheckForUpdates(manual: false)" in sources["App.xaml.cs"], "automatic checks ignore the setting")
 check("VersionChip_MouseLeftButtonDown" in sources["MainWindow.xaml"] and "App.CurrentApp.InstallUpdate()" in sources["MainWindow.xaml.cs"], "the window has no update button")
+# ---------------------------------------------------------------- 0.8.47
+# The in-case door, its diagnostics, and the lid log that comes with every export.
+classifier = sources["CaseSignalClassifier.cs"]
+check('source = "in-case"' in classifier and "data.ModelCode == 0x1420" in classifier and "provenFresh && rememberedPair" in classifier, "the in-case door is missing or lost a guard")
+check(classifier.index("if (OutsideCase(data))") < classifier.index('source = "in-case"'), "an earbud outside the case can reach the in-case door")
+for word in ['"in-case"', '"spent"', '"late"']:
+    check(word in sources["DiagnosticSanitizer.cs"], f"the safe export drops the {word} decision word")
+infra = sources["Infrastructure.cs"]
+check("podsview-trace-lid.log" in infra and "internal static bool IsLidLine(string text)" in infra, "the lid log is missing")
+check("if (_lid.IsOpen)" in sources["App.xaml.cs"], "closing a card shown by hand buries a lid cycle")
+# sim.py mirrors the 0.8.47 timings of LidStateMachine.
+for sim_text, code_text in [("QUIET_TAIL = 6.0", "QuietTail = TimeSpan.FromSeconds(6)"),
+                            ("BURST_WINDOW = 20.0", "BurstWindow = TimeSpan.FromSeconds(20)"),
+                            ("SPENT_WINDOW = 120.0", "SpentWindow = TimeSpan.FromSeconds(120)"),
+                            ("WAKE_SILENCE = 10.0", "WakeSilence = TimeSpan.FromSeconds(10)"),
+                            ("WAKE_QUIET = 6.0", "WakeQuiet = TimeSpan.FromSeconds(6)"),
+                            ("TIMEOUT = 10.0", "StreamTimeout = TimeSpan.FromSeconds(10)"),
+                            ("LOCKOUT = 0.25", "_closeLockout = TimeSpan.FromMilliseconds(250)")]:
+    check(sim_text in model and code_text in lid28, f"sim.py and LidStateMachine disagree: {sim_text} / {code_text}")
+
 print(f"check18: {checks} checks, {len(failures)} failures")
 for failure in failures:
     print("  FAIL " + failure)

@@ -2,8 +2,11 @@
 !paired 1
 !connected 0
 !nearby 1
-!expect shows 3
-!expect hides 3
+# 0.8.47: plus the first opening of the recording - the open c1 stream the case starts at
+# 1.19 s (in the case: status 0x24, then 0x73) and shuts at 9.09 s. The learned path used
+# to miss it; the in-case door shows it at once.
+!expect shows 4
+!expect hides 4
 !expect show-within-ms 250
 !expect hide-within-ms 250
 #

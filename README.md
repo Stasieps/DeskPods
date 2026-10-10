@@ -47,7 +47,7 @@ So I built my own — and made it do exactly one thing, properly.
 | 🔔 **One low-battery alert, not ten** | When an earbud gets low, you get one heads-up per discharge. You choose the threshold (10–50 %). |
 | 👂 **Doesn't get in the way** | Earbuds in your ears don't keep the card hanging on screen. No big windows over your desktop. |
 | ⌨️ **Shortcut** | Press `Ctrl` + `Alt` + `P` any time to see the card. You can change the shortcut. |
-| 🎨 **8 looks** | Pick a design that fits your setup — from paper-white E-Ink to Neon. |
+| 🎨 **5 looks** | Pick a design that fits your setup — from paper-white E-Ink to dark Glass. |
 | 🌍 **English, Українська, Русский** | Switch the language in Settings. |
 | 🚀 **Starts with Windows** | Quietly sits in the tray and is ready before you put the earbuds in. |
 

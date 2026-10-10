@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Model of the 0.8.7 popup logic, replayed against the shape of a real capture.
+"""Model of the popup logic (0.8.7, mirrored up to 0.8.47), replayed against the shape of a real capture.
 
 The capture that produced this design (three minutes, 401 packets, one pair of
 AirPods Pro 2) contained two transmitters sharing one identity:
@@ -13,44 +13,53 @@ the moment the lid opens, and it never comes back on its own once the lid is shu
 """
 import random
 
-LOCKOUT = 0.8
+LOCKOUT = 0.25
 MAX_LOCKOUT = 3.0
 MIN_STREAK = 2
 MAX_GAP = 1.5
 # 0.8.7: the case bursts only when it has news, so silence is not a shut lid. Ten
-# seconds of it suspends the cycle instead of burying it, and the next burst of that
-# same cycle brings the popup straight back.
+# seconds of it take the popup down without burying the cycle.
 TIMEOUT = 10.0
 # 0.8.16: an empty case says its piece in one burst and then goes mute for good, and there
-# is no closed word to react to - no packet in four days reports both buds out. Measured on
-# all 232 recorded popups: 174 cycles said everything within BURST_WINDOW of the popup
-# appearing and never spoke again after a gap over five seconds; the 58 talkative cycles own
-# every long gap in the log (worst 9.99 s), so they keep the full TIMEOUT.
-QUIET_TAIL = 5.0
-BURST_WINDOW = 2.0
-RESUME_WINDOW = 120.0
+# is no closed word to react to - no packet in four days reports both buds out. A cycle that
+# said everything inside BURST_WINDOW of the popup appearing gets the short QUIET_TAIL; a
+# case still talking after that keeps the full TIMEOUT.
+# 0.8.47: QUIET_TAIL 5 -> 6 s and BURST_WINDOW 2 -> 20 s (LidStateMachine.QuietTail and
+# BurstWindow): a hand holding the lid open keeps the case talking, so the card stays;
+# put down, it goes 6 s after the last word.
+QUIET_TAIL = 6.0
+BURST_WINDOW = 20.0
+# 0.8.47: a cycle that left the screen without a close is SPENT - its lid is very probably
+# still open, so its words may not pop the card back up (no pop-back). The hold follows the
+# stream across an address rotation while it has not paused for longer than SPENT_WINDOW,
+# and no shut word wakes anything for SPENT_WINDOW after the popup left. Replaces the
+# 0.8.7 resume window of the same length.
+SPENT_WINDOW = 120.0
 ECHO_OVERRIDE = 5
 ECHO_SPAN = 0.8
 # 0.8.14: the case is off the air unless a hand moves it, so its first word after a long
-# silence is an event and not a level. Counted over the ten recorded sessions: six fires,
-# five of them followed by a real opening within seconds, removing waits of 0.5-4.7 s.
-WAKE_SILENCE = 20.0
+# silence is an event and not a level. 0.8.47: 20 -> 10 s (LidStateMachine.WakeSilence),
+# and before the case's first word since start or an OS reset the silence is UNKNOWN,
+# which counts as long - the first opening after start, boot or unlock shows at once.
+WAKE_SILENCE = 10.0
 WAKE_FLOOR = 1.5
 # The fixtures measure popup delay from the wake-up with their own threshold, so a
 # fixture can be replayed with the rule removed and still measure from the same packet.
 WAKE_MEASURE = 20.0
 # 0.8.15: a popup raised by a wake-up rests on one stale word, so repeats of that same
-# word cannot take it away - the case answered a 2395 s silence with 27 copies of one
-# closed word and nothing else. It ends when the case stops talking instead.
-WAKE_QUIET = 2.5
+# word cannot take it away. It ends when the case stops talking instead.
+# 0.8.47: 2.5 -> 6 s (LidStateMachine.WakeQuiet): the real open word came 4.4-5.4 s
+# after the wake-up in the recordings, and 2.5 s took the card away before it.
+WAKE_QUIET = 6.0
 
 
 class Lid:
+    """Mirror of LidStateMachine (0.8.47)."""
+
     def __init__(self, lockout=LOCKOUT):
         self.lockout = min(lockout, MAX_LOCKOUT)
         self.open = False
         self.streak = 0
-        self.echo = 0
         self.streak_cycle = -1
         self.last_open = None
         self.closed_at = None
@@ -61,25 +70,31 @@ class Lid:
         self.echo = 0
         self.echo_start = None
         self.echo_override = False
-        self.manually_dismissed = False
-        self.suspended_cycle = -1
-        self.suspended_addr = None
-        self.suspended_at = None
+        self.spent_cycle = -1
+        self.spent_addr = None
+        self.spent_at = None
+        self.spent_by_hand = False
         self.last_case = None
+        self.last_silence = None  # LastSilenceMs; None = unknown (-1 in C#)
         self.wake_open = None
         self.wake_cycle = -1
         self.wake_unconfirmed = False
-        self.first_seen = None
         self.cycle_shown = None
         self.raw_opens = {}
+        self.closing_edge = False
+
+    def clear_spent(self):
+        self.spent_cycle, self.spent_addr, self.spent_at, self.spent_by_hand = -1, None, None, False
+
+    def mark_spent(self, cycle, addr, now, by_hand):
+        self.spent_cycle, self.spent_addr, self.spent_at, self.spent_by_hand = cycle, addr, now, by_hand
 
     def handle(self, carries, is_open, cycle, addr, now, trusted=True, bound=True, proven_fresh=False,
                explicit_lid=False):
-        # The moment this session started listening. Silence before it is unknown.
+        self.closing_edge = False
         if not bound or not trusted:
             return 'none'
-        if self.first_seen is None:
-            self.first_seen = now
+        # RecentLidEdges: bounded negative evidence, kept even before classification.
         observed_closing_edge = False
         if proven_fresh and addr and 0 <= cycle <= 7:
             self.raw_opens = {k:v for k,v in self.raw_opens.items() if 0 <= now-v[1] <= MAX_GAP}
@@ -90,56 +105,64 @@ class Lid:
             else:
                 observed_closing_edge = addr in self.raw_opens and self.raw_opens[addr][0] == cycle
                 self.raw_opens.pop(addr,None)
+        self.closing_edge = observed_closing_edge
         if not carries:
-            return 'none' 
-        # Silence measured from the last word of the case, or from the start of the session
-        # if it has not spoken yet, so the first packet of a session cannot wake anything.
-        heard_last = self.last_case if self.last_case is not None else self.first_seen
-        since_case = now - max(heard_last, self.first_seen)
-        self.last_case = now
-        # The wake-up door of LidStateMachine: a case that has been quiet answers its wake-up
-        # with the state it had before, so that word raises the popup instead of settling it.
-        # 0.8.15: an explicit word is woken from too. This case says everything explicitly,
-        # so the 0.8.14 exemption meant the rule never fired once in the whole session.
-        # A cycle suspended moments ago is the one thing left alone: there the popup was lost
-        # to silence with the lid open, so the hand on the case may be shutting it. Past the
-        # resume window that suspension is stale and may not block anything.
-        fresh_suspension = (self.suspended_cycle >= 0 and self.suspended_at is not None
-                            and now - self.suspended_at <= RESUME_WINDOW)
-        if (not is_open and proven_fresh and not self.open and not self.manually_dismissed and not fresh_suspension
-                and since_case >= WAKE_SILENCE and not observed_closing_edge):
-            self.open = True
-            self.cycle_shown = now
-            self.streak = MIN_STREAK
-            self.streak_cycle = cycle
-            self.echo = 0
-            self.suspended_cycle = -1
-            self.live_cycle, self.live_addr = cycle, addr
-            self.last_open = now
-            self.wake_open = now
-            self.wake_cycle = cycle
-            self.wake_unconfirmed = True
-            self.closed_at = None
-            self.closed_cycle = -1
-            self.manually_dismissed = False
-            return 'open'
+            return 'none'
+        # 0.8.47: silence since the case's own last word. Before its first word since start
+        # or an OS reset it is unknown, and unknown counts as long.
+        heard_before = self.last_case is not None
+        since_case = now - self.last_case if heard_before else float('inf')
+        self.last_silence = since_case if heard_before else None
+        if not heard_before or now > self.last_case:
+            self.last_case = now
+        # A cycle that left the screen without a close is spent: its counter from the address
+        # it was hidden on, or from a rotated address while its stream has not paused long.
+        spent = (self.spent_cycle >= 0 and cycle == self.spent_cycle
+                 and (addr == self.spent_addr or since_case <= SPENT_WINDOW))
         if not is_open:
-            if self.open and self.wake_unconfirmed and cycle == self.wake_cycle and self.wake_open is not None and now - self.wake_open < WAKE_FLOOR:
+            if (self.open and self.wake_unconfirmed and cycle == self.wake_cycle
+                    and self.wake_open is not None and now - self.wake_open < WAKE_FLOOR):
                 return 'update'
-            # The stale snapshot that raised the wake-up, said again: the case repeats it
-            # eight times a second and it is not news until the counter moves.
+            # The stale snapshot that raised the wake-up, said again: not news until the
+            # counter moves.
             if self.open and self.wake_unconfirmed and cycle == self.wake_cycle:
                 return 'update'
-            self.wake_open = None
-            self.wake_unconfirmed = False
+            # 0.8.47: a late copy - "shut" under the counter before the one on screen, or
+            # stamped before the last open word. BLE does not deliver in order.
+            if self.open and ((self.last_open is not None and now < self.last_open)
+                              or (self.live_cycle >= 0 and cycle == (self.live_cycle + 7) & 7)):
+                return 'update'
+            # The wake-up door: the case broke a silence, so a hand moved it. Not after a
+            # spent cycle - its own counter never wakes, and no counter does for SPENT_WINDOW.
+            spent_hold = spent or (self.spent_cycle >= 0 and self.spent_at is not None
+                                   and 0 <= now - self.spent_at <= SPENT_WINDOW)
+            if (not self.open and proven_fresh and since_case >= WAKE_SILENCE
+                    and not observed_closing_edge and not spent_hold):
+                self.open = True
+                self.cycle_shown = now
+                self.streak = MIN_STREAK
+                self.streak_cycle = cycle
+                self.echo = 0
+                self.clear_spent()
+                self.live_cycle, self.live_addr = cycle, addr
+                self.last_open = now
+                self.wake_open = now
+                self.wake_cycle = cycle
+                self.wake_unconfirmed = True
+                self.closed_at = None
+                self.closed_cycle = -1
+                return 'open'
+            # A real close: the counter is buried, and its stale open copies are echoes.
             self.streak = 0
-            self.suspended_cycle = -1
             self.closed_cycle = cycle
             self.closed_addr = addr
             self.echo_override = True
-            self.manually_dismissed = False
             if self.closed_at is None or now > self.closed_at:
                 self.closed_at = now
+            self.clear_spent()
+            self.wake_open = None
+            self.wake_unconfirmed = False
+            self.wake_cycle = -1
             if not self.open:
                 return 'none'
             self.open = False
@@ -153,49 +176,49 @@ class Lid:
             self.wake_open = None
             self.wake_cycle = -1
             return 'update'
-        resuming = (self.suspended_cycle >= 0 and cycle == self.suspended_cycle
-                    and addr == self.suspended_addr
-                    and now - self.suspended_at <= RESUME_WINDOW)
+        # 0.8.47: the lid of a spent cycle is still open; its words are not a new opening.
+        if spent:
+            self.spent_addr = addr
+            self.streak = 0
+            self.last_open = now
+            return 'none'
         # An echo is the buried cycle coming back from the address that buried it. The
         # counter only runs 0-7 and Apple rotates the case address, so the same number from
         # a new address is a real opening (0.8.9).
         echo_of_closed = cycle == self.closed_cycle and addr == self.closed_addr
-        # 0.8.9 instant path: decided before the lockout, because on 2026-08-29 that lockout
-        # held back 11 of 13 real openings by 104-833 ms and stacked to 6260 ms on fast flips.
-        idle_reopen = echo_of_closed and self.echo_override and not self.manually_dismissed and since_case > RESUME_WINDOW
-        if proven_fresh and (resuming or not echo_of_closed or idle_reopen):
+        # 0.8.9 instant path: decided before the lockout. A three-bit counter can repeat
+        # after a long quiet, but only after a RADIO close (echo_override).
+        idle_reopen = echo_of_closed and self.echo_override and since_case > SPENT_WINDOW
+        if proven_fresh and (not echo_of_closed or idle_reopen):
             self.open = True
             self.cycle_shown = now
             self.streak = MIN_STREAK
             self.streak_cycle = cycle
             self.echo = 0
-            self.suspended_cycle = -1
-            self.live_cycle = cycle
-            self.live_addr = addr
+            self.clear_spent()
+            self.live_cycle, self.live_addr = cycle, addr
             self.last_open = now
             self.wake_unconfirmed = False
             self.closed_at = None
             self.closed_cycle = -1
-            self.manually_dismissed = False
             return 'open'
-
-        if not resuming:
-            if echo_of_closed:
-                if self.echo == 0 or self.last_open is None or now - self.last_open > MAX_GAP:
-                    self.echo, self.echo_start = 1, now
-                else:
-                    self.echo += 1
-                if not self.echo_override or self.echo < ECHO_OVERRIDE or now - self.echo_start < ECHO_SPAN:
-                    self.streak = 0
-                    self.last_open = now
-                    return 'none'
-                self.closed_cycle = -1
-                self.closed_at = None
-                self.echo = 0
-            if self.closed_at is not None and now - self.closed_at < self.lockout:
+        if echo_of_closed:
+            if self.echo == 0 or self.last_open is None or now - self.last_open > MAX_GAP:
+                self.echo, self.echo_start = 1, now
+            else:
+                self.echo += 1
+            if not self.echo_override or self.echo < ECHO_OVERRIDE or now - self.echo_start < ECHO_SPAN:
                 self.streak = 0
                 self.last_open = now
                 return 'none'
+            self.closed_cycle = -1
+            self.closed_at = None
+            self.echo = 0
+        # 0.8.47: the lockout covers the counter that was just closed, nothing else.
+        if self.closed_at is not None and cycle == self.closed_cycle and now - self.closed_at < self.lockout:
+            self.streak = 0
+            self.last_open = now
+            return 'none'
         if self.streak == 0 or self.streak_cycle != cycle or now - self.last_open > MAX_GAP:
             self.streak = 1
             self.streak_cycle = cycle
@@ -208,12 +231,11 @@ class Lid:
         self.open = True
         self.cycle_shown = now
         self.echo = 0
-        self.suspended_cycle = -1
+        self.clear_spent()
         self.live_cycle, self.live_addr = cycle, addr
         self.wake_unconfirmed = False
         self.closed_at = None
         self.closed_cycle = -1
-        self.manually_dismissed = False
         return 'open'
 
     def said_its_piece(self):
@@ -233,17 +255,16 @@ class Lid:
             return True
         return now - self.last_open > self.tail()
 
-
-
     def end_unconfirmed_wake(self, now):
-        """A wake-up nobody confirmed: nothing is suspended, so the next one can fire."""
+        """A wake-up nobody confirmed: nothing is spent, so the next one can fire."""
         self.open = False
         self.streak = 0
         self.streak_cycle = -1
         self.echo = 0
         self.wake_open = None
         self.wake_unconfirmed = False
-        self.suspended_cycle = -1
+        self.wake_cycle = -1
+        self.last_open = now
 
     def pending_due(self):
         """When the watchdog next has something to do, or None."""
@@ -270,7 +291,7 @@ class Lid:
                 done.append(('silence', due))
 
     def suspend_for_silence(self, now):
-        """Silence hides the popup but keeps the cycle alive, so its own case can resume it."""
+        """Silence hides the popup without burying the cycle; 0.8.47 marks it spent."""
         if not self.open:
             return
         self.open = False
@@ -279,29 +300,29 @@ class Lid:
         self.echo = 0
         self.wake_open = None
         self.wake_unconfirmed = False
+        self.wake_cycle = -1
         if self.live_cycle >= 0:
-            self.suspended_cycle = self.live_cycle
-            self.suspended_addr = self.live_addr
-            self.suspended_at = now
+            self.mark_spent(self.live_cycle, self.live_addr, now, by_hand=False)
 
     def reset_for_system(self, now):
         self.__init__(self.lockout)
 
     def force_closed(self, now):
+        """The close button: buries the cycle on screen and (0.8.47) marks it spent."""
         self.echo_override = False
-        self.manually_dismissed = True
         if self.live_cycle >= 0:
             self.closed_cycle = self.live_cycle
             self.closed_addr = self.live_addr
+            self.mark_spent(self.live_cycle, self.live_addr, now, by_hand=True)
         self.open = False
         self.streak = 0
         self.echo = 0
         self.streak_cycle = -1
-        self.suspended_cycle = -1
         self.last_open = now
         self.closed_at = now
         self.wake_open = None
         self.wake_unconfirmed = False
+        self.wake_cycle = -1
 
 
 EARBUD = 0x49DAA4EFA596
@@ -447,8 +468,12 @@ check(lid.handle(True, True, 3, CASE_A, 0.2) == 'open', 'the popup must appear i
 # its wake-up with the state it had before sleeping - lid 0x58, counter 0 - and the true open
 # word only came 4.7 s later, after a second lid movement by hand.
 lid = Lid()
-check(lid.handle(True, False, 4, CASE_A, 0.0, proven_fresh=True) == 'none',
-      'the first word a session hears has no measured silence behind it and may not wake')
+# 0.8.47: the first word a session hears breaks an unknown silence, and unknown counts as
+# long - after start, boot or unlock the first movement of the case shows at once.
+check(lid.handle(True, False, 4, CASE_A, 0.0, proven_fresh=True) == 'open',
+      'the first word a session hears must wake the popup')
+check(lid.tick(0.0 + WAKE_QUIET + 0.1) and not lid.open,
+      'an unconfirmed first-word wake ends when the case stops talking')
 check(lid.handle(True, False, 0, CASE_A, 100.0, proven_fresh=True) == 'open',
       'the first word of a case that has been quiet must raise the popup')
 check(lid.handle(True, False, 0, CASE_A, 100.4, proven_fresh=True) == 'update',
@@ -468,6 +493,7 @@ check(lid.tick(103.0 + WAKE_QUIET + 0.1) and not lid.open,
 # A different counter is news, and an explicit word carries it at once.
 lid = Lid()
 lid.handle(True, False, 0, CASE_A, 0.0, proven_fresh=True)
+lid.tick(10.0)  # 0.8.47: that first word woke the popup; let the watchdog end it
 check(lid.handle(True, False, 0, CASE_A, 100.0, proven_fresh=True) == 'open', 'setup')
 check(lid.handle(True, False, 1, CASE_A, 102.0, proven_fresh=True, explicit_lid=True) == 'close',
       'a shut lid reported under a new counter must take the popup away')
@@ -479,11 +505,13 @@ check(lid.handle(True, False, 1, CASE_A, 102.0, proven_fresh=True, explicit_lid=
 # 19 and 27 closed words in a row - so there was nothing else left to wait for.
 lid = Lid()
 lid.handle(True, False, 3, CASE_A, 0.0, proven_fresh=True, explicit_lid=True)
+lid.tick(10.0)  # 0.8.47: that first word woke the popup; let the watchdog end it
 check(lid.handle(True, False, 3, CASE_A, 100.0, proven_fresh=True, explicit_lid=True) == 'open',
       'an explicit word after a long silence is the case waking up, not reporting a shut lid')
 
 # The one case that is left alone: the popup was lost to silence with the lid open, so the
-# hand on the case may be shutting it. That only holds while the cycle could still resume.
+# hand on the case may be shutting it. 0.8.47: that cycle is spent - its own shut word never
+# wakes, and no shut word does for SPENT_WINDOW after the popup left.
 lid = Lid()
 lid.handle(True, True, 2, CASE_A, 0.0, proven_fresh=True)
 lid.suspend_for_silence(30.0)
@@ -492,9 +520,19 @@ check(lid.handle(True, False, 2, CASE_A, 60.0, proven_fresh=True, explicit_lid=T
 lid = Lid()
 lid.handle(True, True, 2, CASE_A, 0.0, proven_fresh=True)
 lid.suspend_for_silence(30.0)
-check(lid.handle(True, False, 2, CASE_A, 30.0 + RESUME_WINDOW + 10.0, proven_fresh=True,
-                 explicit_lid=True) == 'open',
-      'past the resume window that suspension is stale and may not block a wake-up')
+check(lid.handle(True, False, 2, CASE_A, 30.0 + SPENT_WINDOW + 10.0, proven_fresh=True,
+                 explicit_lid=True) == 'none',
+      'the shut word of a spent cycle may never wake the popup - its lid was left open')
+lid = Lid()
+lid.handle(True, True, 2, CASE_A, 0.0, proven_fresh=True)
+lid.suspend_for_silence(30.0)
+check(lid.handle(True, False, 3, CASE_A, 60.0, proven_fresh=True) == 'none',
+      'no shut word may wake anything within SPENT_WINDOW of a spent popup')
+lid = Lid()
+lid.handle(True, True, 2, CASE_A, 0.0, proven_fresh=True)
+lid.suspend_for_silence(30.0)
+check(lid.handle(True, False, 3, CASE_A, 30.0 + SPENT_WINDOW + 10.0, proven_fresh=True) == 'open',
+      'past SPENT_WINDOW another counter breaking a silence is a wake-up again')
 
 # Inside a burst the packets are a fraction of a second apart, so nothing there may wake.
 # An explicit closed word still hides the popup on the spot - closing the lid by hand has
@@ -518,6 +556,7 @@ check(lid.handle(True, True, 2, CASE_A, 0.6, proven_fresh=True) != 'open',
 # A packet Windows queued cannot prove it is new, so it may not wake anything.
 lid = Lid()
 lid.handle(True, False, 1, CASE_A, 0.0, proven_fresh=True)
+lid.tick(10.0)  # 0.8.47: that first word woke the popup; let the watchdog end it
 check(lid.handle(True, False, 1, CASE_A, 100.0, proven_fresh=False) == 'none',
       'a packet that cannot prove its age must not wake the popup')
 
@@ -529,13 +568,21 @@ lid.handle(False, False, 0, EARBUD, 0.0)
 check(lid.handle(True, False, 5, CASE_A, 25.0, proven_fresh=True) == 'open',
       'a case silent through the first 25 s of a session is waking, not settling')
 
+# 0.8.47: earbud packets carry no lid and measure no silence, so the case's first word still
+# wakes; five seconds of quiet AFTER the case has spoken is normal and may not.
 lid = Lid()
 lid.handle(False, False, 0, EARBUD, 0.0)
-check(lid.handle(True, False, 5, CASE_A, 5.0, proven_fresh=True) == 'none',
+check(lid.handle(True, False, 5, CASE_A, 5.0, proven_fresh=True) == 'open' and lid.last_silence is None,
+      'earbud chatter measured a silence for the case')
+lid = Lid()
+lid.handle(True, True, 5, CASE_A, 0.0, proven_fresh=True)
+lid.handle(True, False, 5, CASE_A, 1.0, proven_fresh=True)
+check(lid.handle(True, False, 5, CASE_A, 6.0, proven_fresh=True) == 'none',
       'five seconds of quiet is normal between bursts and may not wake anything')
 
-# 9. The lid stays open but the case goes quiet for half a minute. The popup may go
-# away, but it has to come back on the very next burst - it never physically shut.
+# 9. The lid stays open but the case goes quiet for half a minute. The popup goes away,
+# and 0.8.47 keeps it away: the cycle is spent, so a case lying open may not pop the card
+# back up on every burst (no pop-back). The next opening carries a new counter and shows.
 for quiet in (11.0, 20.0, 45.0, 110.0):
     lid = Lid()
     lid.handle(True, True, 2, CASE_A, 0.0)
@@ -543,13 +590,18 @@ for quiet in (11.0, 20.0, 45.0, 110.0):
     t = 0.15
     while not lid.timed_out(t):
         t += 0.25
-    check(4.5 < t - 0.15 < 6.0, 'a case that said its piece in one burst gets the short tail')
+    check(5.5 < t - 0.15 < 7.0, 'a case that said its piece in one burst gets the short tail')
     lid.suspend_for_silence(t)
     check(not lid.open, 'silence must take the popup down')
     back = t + quiet
     lid.handle(True, True, 2, CASE_A, back)
-    check(lid.handle(True, True, 2, CASE_A, back + 0.14) == 'open',
-          'a case that never closed must get its popup back after %.0fs of quiet' % quiet)
+    check(lid.handle(True, True, 2, CASE_A, back + 0.14) != 'open',
+          'a case lying open popped the card back up after %.0fs of quiet' % quiet)
+    check(lid.handle(True, True, 2, CASE_A, back + 0.3, proven_fresh=True) != 'open',
+          'a fresh word of a spent cycle popped the card back up after %.0fs of quiet' % quiet)
+    lid.handle(True, False, 2, CASE_A, back + 2.0)
+    check(lid.handle(True, True, 3, CASE_A, back + 3.0, proven_fresh=True) == 'open',
+          'the next real opening after a spent cycle must show at once')
 
 # 9a. 0.8.16: the short tail belongs only to a case that said everything at once. A case
 # still talking after the burst window keeps the full ten seconds, because every long gap in
@@ -559,7 +611,8 @@ lid = Lid()
 lid.handle(True, True, 2, CASE_A, 0.0)
 check(lid.handle(True, True, 2, CASE_A, 0.15) == 'open', 'setup')
 t = 0.15
-while t < 3.0:
+# 0.8.47: the burst window is 20 s, so this case keeps talking past it.
+while t < BURST_WINDOW + 3.0:
     t += 0.5
     lid.handle(True, True, 2, CASE_A, t)
 check(not lid.said_its_piece(), 'a case still talking past the burst window has not said its piece')
@@ -585,7 +638,7 @@ lid.handle(True, True, 4, CASE_A, 0.0)
 lid.handle(True, True, 4, CASE_A, 0.15)
 lid.suspend_for_silence(11.0)
 lid.handle(True, False, 4, CASE_A, 12.0)
-check(lid.suspended_cycle == -1, 'a closed packet must cancel the suspension')
+check(lid.spent_cycle == -1, 'a closed packet must clear the spent mark')
 for i in range(40):
     check(lid.handle(True, True, 4, CASE_A, 12.5 + i * 2.5) != 'open',
           'the lid was shut during the silence, so a stale packet may not resume')
@@ -651,7 +704,7 @@ MAX_SHAPE_WORDS = 8
 # 0.8.35: the shape table used to share MAX_TRUSTED's 4 slots. One case needs more than
 # that: the 2026-09-08 trace has 0x39, 0x3A, 0x3D, 0x3E, 0x49 and 0x4D from one case.
 MAX_SHAPES = 12
-COLD_QUIET = 120.0
+COLD_QUIET = 120.0  # CaseSignalClassifier.ColdQuiet; its cold profile is unused since 0.8.47
 
 
 class LidBytes:
@@ -917,6 +970,7 @@ def parse_payload(text):
     batteries = (decode_battery(raw[6] >> 4), decode_battery(raw[6] & 0x0F), decode_battery(raw[7] & 0x0F))
     return {
         'lid': lid,
+        'model': (raw[3] << 8) | raw[4],
         'identity': (raw[5] << 16) | (raw[6] << 8) | raw[7],
         'counter': lid & 0b0000_0111,
         'is_open': (lid & 0b0000_1000) == 0,
@@ -1008,7 +1062,9 @@ def run_fixture(fixture):
         now = ms / 1000.0
         watchdog(now)
         if not dismissed and ms >= dismiss:
-            lid.force_closed(dismiss / 1000.0)
+            # 0.8.47: App calls ForceClosed only while the lid machine owns the popup.
+            if lid.open:
+                lid.force_closed(dismiss / 1000.0)
             dismissed = True
         data = parse_payload(payload)
         if data is None:
@@ -1029,11 +1085,18 @@ def run_fixture(fixture):
         # BluetoothMonitor, so a byte the radio could not place cannot fake a change.
         if rssi <= UNKNOWN_RSSI or not trusted or not bound:
             continue
-        shape = signal.shape(data['identity'])
-        quiet = max(0,now-shape_traffic.get(shape,0.0));shape_traffic[shape]=now
-        # 0.8.37: cold bootstrap is the two validated shapes only. Release31 walks all 256.
-        profile = head['paired'] and 0 <= age <= 2000 and int(payload[6:10],16)==0x1420 and shape in (0x39,0x49) and quiet>COLD_QUIET
-        believe = signal.believe(addr,data['identity'],data['lid'],now,validated_case_profile=profile)[0]
+        # Mirror of CaseSignalClassifier.Believe. 0.8.41: an earbud outside the case (byte 5
+        # without bit 6 and bit 2) does not know the lid and never reaches the signature table.
+        # 0.8.47: what the table does not believe, the in-case door does - a fresh word of the
+        # remembered AirPods Pro 2 from inside the case. The 0.8.37 cold profile is gone.
+        identity = data['identity']
+        if identity != 0 and ((identity >> 16) & 0x44) == 0:
+            believe = False
+        else:
+            believe = signal.believe(addr, identity, data['lid'], now)[0]
+            if (not believe and head['paired'] and 0 <= age <= INSTANT_AGE_MS
+                    and data['model'] == 0x1420 and identity != 0):
+                believe = True
 
         if not packet_allowed(believe, data['has_battery'], rssi,
                               head['paired'], head['connected'], head['nearby']):
@@ -1071,7 +1134,7 @@ def run_fixture(fixture):
 
     # The recording ends but the app keeps ticking, so a held-back close still lands.
     if fixture['packets']:
-        watchdog(fixture['packets'][-1][1] / 1000.0 + WAKE_QUIET + 1.0)
+        watchdog(fixture['packets'][-1][1] / 1000.0 + TIMEOUT + 1.0)  # 0.8.47: the longest tail
     if state['visible_since'] is not None:
         lives.append(float('inf'))
     worst_hide = max(worst_hide, state['worst_hide'])

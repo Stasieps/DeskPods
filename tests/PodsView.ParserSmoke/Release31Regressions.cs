@@ -43,14 +43,20 @@ internal static class Release31Regressions
             check(lid.Handle(Classify(signal, reopened, 11, at.AddMilliseconds(40)), true, 2, 11,
                 at.AddMilliseconds(40), provenFresh: true) == LidAction.Open, "31: rotated first case packet lost");
         }
-        // Exhaust the 8-bit profile space. Merely having a battery or being nearby
-        // must not bootstrap an arbitrary earbud copy as a case.
+        // Exhaust the 8-bit profile space. 0.8.47: the cold profile (only shapes 0x39/0x49
+        // after 120 s of quiet) is replaced by the in-case door - a fresh word of the
+        // remembered AirPods Pro 2 sent from inside the case is believed whatever its shape,
+        // because waiting to learn the shape is what lost the first opening. Merely having a
+        // battery or being nearby still bootstraps nothing: the same word from an earbud
+        // OUTSIDE the case (byte 5 without bit 6 and bit 2) is never believed.
         for (int shape = 0; shape <= 255; shape++)
         {
             uint identity = (uint)((((shape >> 4) | 0x40) << 16) | 0xA000 | ((shape & 15) << 4) | 3);
             var data = Packet(identity, 0x11);
-            bool actual = Classify(new LidSignal(), data, 1, t.AddHours(3));
-            check(actual == (shape is 0x39 or 0x49), "31: cold profile escaped the two validated shapes");
+            check(Classify(new LidSignal(), data, 1, t.AddHours(3)), "31: the in-case door refused a fresh in-case word");
+            if (((shape >> 4) & 0x04) != 0) continue;
+            uint outside = (uint)(((shape >> 4) << 16) | 0xA000 | ((shape & 15) << 4) | 3);
+            check(!Classify(new LidSignal(), Packet(outside, 0x11), 1, t.AddHours(3)), "31: an earbud outside the case was believed as the lid");
         }
         foreach (uint identity in new uint[] { 0x02F78F, 0x13A7A3, 0x22F28F, 0x33A2A4 })
         {
@@ -65,7 +71,14 @@ internal static class Release31Regressions
         check(!Classify(new LidSignal(), profile, 1, t.AddHours(3), rssi:-127), "31: unknown RSSI bootstrapped profile");
         foreach (ushort model in new ushort[] { 0x0E20, 0x0A20, 0xFE20 })
             check(!Classify(new LidSignal(), Packet(0x24FA93, 0x51, model), 1, t.AddHours(3)), "31: Pro2 profile leaked to another model");
+        // 0.8.47: a continuous in-case stream is believed word by word (LidStateMachine shows
+        // its cycle once and then holds it as spent); the out-of-case copies never are.
         foreach (uint id in new uint[] { 0x24FA93, 0x735697 })
+        {
+            var repeatSignal = new LidSignal(); var repeated = Packet(id,0x11);
+            for (int i=0;i<1000;i++) check(Classify(repeatSignal,repeated,1,t.AddSeconds(i)),"31: the in-case door dropped a repeated in-case word");
+        }
+        foreach (uint id in new uint[] { 0x20FA93, 0x335697 })
         {
             var repeatSignal = new LidSignal(); var repeated = Packet(id,0x11);
             for (int i=0;i<1000;i++) check(!Classify(repeatSignal,repeated,1,t.AddSeconds(i)),"31: continuous matching-shape stream promoted");
@@ -88,9 +101,11 @@ internal static class Release31Regressions
         system.Handle(true,true,2,1,t.AddHours(3).AddMilliseconds(10),provenFresh:true);
         check(system.Handle(true,false,2,1,t.AddHours(3).AddMilliseconds(20),provenFresh:true)==LidAction.Close,
             "31: close after reset waited for wake floor");
+        // 0.8.47: after an OS reset (boot, unlock) the silence is unknown, and unknown counts
+        // as long, so the case's first word wakes the popup at once.
         var cold = new LidStateMachine(); cold.ResetForSystem(t);
-        check(cold.Handle(true,false,1,1,t.AddHours(3),provenFresh:true)==LidAction.None,
-            "31: reset invented unobserved silence");
+        check(cold.Handle(true,false,1,1,t.AddHours(3),provenFresh:true)==LidAction.Open && cold.LastSilenceMs < 0,
+            "31: the first word after an OS reset did not wake the popup");
 
         // Missing-cycle sequence in the supplied SAFE diagnostic export: keep it missing.
         // Without an open packet we must never fabricate an opening on a quick closed word.

@@ -3,7 +3,7 @@ using System.Linq;
 namespace PodsView;
 
 /// <summary>
-/// Eight interchangeable looks. A theme swaps the palette, the accent and the dot
+/// Five interchangeable looks. A theme swaps the palette, the accent and the dot
 /// pattern only: the measured geometry stays untouched, so no layout can break.
 ///
 /// 0.8.18 adds two things. The popup card, its rim and its glow are palette entries
@@ -11,6 +11,10 @@ namespace PodsView;
 /// repainted the dots while the card stayed black (and old dots stayed on that
 /// window). And <see cref="Changed"/> lets an open window repaint the
 /// brushes it sets from code instead of waiting for the next packet.
+///
+/// 0.8.47 removes TERMINAL, CARBON and NEON (the user dropped them). A saved
+/// setting that still names one of them falls back to REFINED through
+/// AppSettings.NormalizeTheme, so nobody is left on a missing palette.
 /// </summary>
 internal static class ThemeManager
 {
@@ -84,37 +88,7 @@ internal static class ThemeManager
         },
         new Palette
         {
-            Id = "terminal", Label = "4  TERMINAL",
-            Canvas = "#05080A", Surface = "#070C0E", Raised = "#0B1417", Elevated = "#102020",
-            Hairline = "#153A2A", Border = "#1D5A3C", TagBorder = "#1D5A3C",
-            PrimaryText = "#35FF6A", SecondaryText = "#1FBF52", MutedText = "#147A38",
-            Accent = "#35FF6A", Warn = "#FFD447", Ok = "#35FF6A", Info = "#1FBF52", Live = "#8CFFB0",
-            PopupCanvas = "#FA050B0A", PopupRim = "#5A1FBF52", PopupGlow = "#8CFFB0",
-            Dot = "#123D24", DotTile = 3d, DotRadius = 0.5d,
-        },
-        new Palette
-        {
-            Id = "carbon", Label = "5  CARBON",
-            Canvas = "#16181A", Surface = "#1B1E20", Raised = "#212528", Elevated = "#2A2F33",
-            Hairline = "#33383D", Border = "#43494F", TagBorder = "#43494F",
-            PrimaryText = "#F0F1F2", SecondaryText = "#A9AFB5", MutedText = "#71787E",
-            Accent = "#FF7A1A", Warn = "#FFC24D", Ok = "#F0F1F2", Info = "#A9AFB5", Live = "#FF9A45",
-            PopupCanvas = "#FA1A1D1F", PopupRim = "#4AFFFFFF", PopupGlow = "#FF9A45",
-            Dot = "#3A4046", DotTile = 4d, DotRadius = 0.7d,
-        },
-        new Palette
-        {
-            Id = "neon", Label = "6  NEON",
-            Canvas = "#0A0620", Surface = "#120A2E", Raised = "#1B0F42", Elevated = "#251657",
-            Hairline = "#33206E", Border = "#4A2E9A", TagBorder = "#4A2E9A",
-            PrimaryText = "#F2ECFF", SecondaryText = "#B9A6FF", MutedText = "#7E6BC4",
-            Accent = "#FF4FD8", Warn = "#FFD166", Ok = "#7AF5FF", Info = "#B9A6FF", Live = "#4ADE80",
-            PopupCanvas = "#F41A0F3E", PopupRim = "#59FF4FD8", PopupGlow = "#FF4FD8",
-            Dot = "#4A2E9A", DotTile = 6d, DotRadius = 0.9d,
-        },
-        new Palette
-        {
-            Id = "eink", Label = "7  E-INK  (paper)",
+            Id = "eink", Label = "4  E-INK  (paper)",
             Canvas = "#EEE9DD", Surface = "#F6F2E9", Raised = "#E4DECF", Elevated = "#D9D2C1",
             Hairline = "#C3BBA8", Border = "#23211C", TagBorder = "#23211C",
             PrimaryText = "#23211C", SecondaryText = "#55503F", MutedText = "#857F6C",

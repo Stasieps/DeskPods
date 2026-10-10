@@ -63,6 +63,24 @@ internal static class CoreRegressions
         check(UpdateRelease.Pick(Release("{\"tag_name\":\"v0.9.0\",\"assets\":[{\"name\":\"DeskPods_Setup_v0.9.0.exe\",\"browser_download_url\":\"http://evil.example/x.exe\"}]}"), "0.8.46")?.InstallerUrl is null, "Untrusted download accepted");
         check(UpdateRelease.TryParseVersion("v0.8.10", out Version ten) && UpdateRelease.IsNewer(ten, new Version(0, 8, 9)), "0.8.10 must be newer than 0.8.9");
 
+        // 0.8.47: the setup has to match the SHA-256 GitHub publishes with the asset.
+        check(newer?.InstallerSha256 is null, "A release without digests invented a SHA-256");
+        byte[] setupBytes = System.Text.Encoding.ASCII.GetBytes("MZ DeskPods setup");
+        byte[] setupHash = System.Security.Cryptography.SHA256.HashData(setupBytes);
+        string setupHex = Convert.ToHexString(setupHash).ToLowerInvariant();
+        string otherHex = new string('7', 64);
+        string Asset(string name, string hex) => "{\"name\":\"" + name + "\",\"browser_download_url\":\"https://github.com/Stasieps/DeskPods/releases/download/v0.8.47/" + name + "\",\"digest\":\"sha256:" + hex + "\"}";
+        UpdateInfo? hashed = UpdateRelease.Pick(Release("{\"tag_name\":\"v0.8.47\",\"assets\":[" + Asset("DeskPods_Setup.exe", otherHex) + "," + Asset("DeskPods_Setup_v0.8.47.exe", setupHex.ToUpperInvariant()) + "]}"), "0.8.46");
+        check(hashed?.InstallerUrl?.EndsWith("DeskPods_Setup_v0.8.47.exe") == true && hashed.InstallerSha256 == setupHex, "The versioned setup did not bring its own SHA-256");
+        UpdateInfo? fallback = UpdateRelease.Pick(Release("{\"tag_name\":\"v0.8.47\",\"assets\":[" + Asset("DeskPods_Setup.exe", otherHex) + "]}"), "0.8.46");
+        check(fallback?.InstallerUrl?.EndsWith("/DeskPods_Setup.exe") == true && fallback.InstallerSha256 == otherHex, "The fallback setup did not bring its own SHA-256");
+        check(UpdateRelease.Sha256Hex(null) is null && UpdateRelease.Sha256Hex("") is null && UpdateRelease.Sha256Hex("sha512:" + setupHex) is null
+              && UpdateRelease.Sha256Hex("sha256:" + setupHex[..63]) is null && UpdateRelease.Sha256Hex("sha256:" + setupHex[..63] + "g") is null, "A malformed digest was accepted");
+        check(UpdateRelease.Sha256Hex("SHA256:" + setupHex.ToUpperInvariant()) == setupHex, "A well-formed digest was refused");
+        check(UpdateRelease.DigestAccepts(setupHex, setupHash) && UpdateRelease.DigestAccepts(setupHex.ToUpperInvariant(), setupHash), "A setup matching its SHA-256 was refused");
+        check(!UpdateRelease.DigestAccepts(otherHex, setupHash), "A setup that does not match its SHA-256 was accepted");
+        check(UpdateRelease.DigestAccepts(null, setupHash), "A release without a digest can no longer update");
+
         var settings = new AppSettings { LastCaseBattery = 40, CaseShapes = "49", TrayHintShown = false };
         AppSettings dialog = settings.Clone();
         settings.RememberCase(50, "pro/00");
@@ -90,6 +108,18 @@ internal static class CoreRegressions
             migrated.Theme = "mono";
             check(migrated.Save(path) && AppSettings.Load(path).Theme == "mono", "Classic choice did not survive restart");
             check(AppSettings.ThemeIds.Contains("refined") && AppSettings.ThemeIds.Contains("mono"), "Refined or Classic missing");
+            // 0.8.47: TERMINAL, CARBON and NEON are gone. A saved choice of one of them lands
+            // on Refined instead of a missing palette; E-INK, the paper theme, stays.
+            foreach (string removed in new[] { "terminal", "carbon", "neon" })
+            {
+                check(!AppSettings.ThemeIds.Contains(removed), $"Removed theme {removed} is still offered");
+                File.WriteAllText(path, "{\"SettingsRevision\":9,\"Theme\":\"" + removed + "\",\"PreviousTheme\":\"" + removed + "\"}");
+                AppSettings landed = AppSettings.Load(path);
+                check(landed.Theme == "refined" && landed.PreviousTheme == "refined", $"A saved {removed} theme did not fall back to Refined");
+            }
+            File.WriteAllText(path, "{\"SettingsRevision\":9,\"Theme\":\"eink\"}");
+            check(AppSettings.ThemeIds.Contains("eink") && AppSettings.Load(path).Theme == "eink", "The E-INK theme did not survive");
+            check(AppSettings.ThemeIds.Length == 5, "0.8.47 offers exactly five themes");
             File.WriteAllText(path, "{ broken json");
             check(AppSettings.Load(path).Theme == "refined", "Corrupt JSON must safely fall back");
         }
