@@ -27,7 +27,9 @@ internal static class DiagnosticSanitizer
       "cloaked", "offscreen", "covered", "pixels", "-", "keepalive", "display-on", "display-change", "dwm", "render-tier",
       "display", "on", "off", "dim", "unknown", "dpi", "work-area", "popup-source", "throttle", "lock", "unlock", "logon",
       "console-connect", "console-disconnect", "session-other", "case-silence", "missed-open",
-      "pixel-check-advisory", "futile", "in-ear", "out-of-case" };
+      "pixel-check-advisory", "futile", "in-ear", "out-of-case",
+      // 0.8.47: the in-case door, spent cycles and late copies.
+      "in-case", "spent", "late" };
 
     internal static string? Sanitize(string line)
     {

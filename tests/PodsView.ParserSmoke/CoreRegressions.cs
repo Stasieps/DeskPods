@@ -108,6 +108,18 @@ internal static class CoreRegressions
             migrated.Theme = "mono";
             check(migrated.Save(path) && AppSettings.Load(path).Theme == "mono", "Classic choice did not survive restart");
             check(AppSettings.ThemeIds.Contains("refined") && AppSettings.ThemeIds.Contains("mono"), "Refined or Classic missing");
+            // 0.8.47: TERMINAL, CARBON and NEON are gone. A saved choice of one of them lands
+            // on Refined instead of a missing palette; E-INK, the paper theme, stays.
+            foreach (string removed in new[] { "terminal", "carbon", "neon" })
+            {
+                check(!AppSettings.ThemeIds.Contains(removed), $"Removed theme {removed} is still offered");
+                File.WriteAllText(path, "{\"SettingsRevision\":9,\"Theme\":\"" + removed + "\",\"PreviousTheme\":\"" + removed + "\"}");
+                AppSettings landed = AppSettings.Load(path);
+                check(landed.Theme == "refined" && landed.PreviousTheme == "refined", $"A saved {removed} theme did not fall back to Refined");
+            }
+            File.WriteAllText(path, "{\"SettingsRevision\":9,\"Theme\":\"eink\"}");
+            check(AppSettings.ThemeIds.Contains("eink") && AppSettings.Load(path).Theme == "eink", "The E-INK theme did not survive");
+            check(AppSettings.ThemeIds.Length == 5, "0.8.47 offers exactly five themes");
             File.WriteAllText(path, "{ broken json");
             check(AppSettings.Load(path).Theme == "refined", "Corrupt JSON must safely fall back");
         }

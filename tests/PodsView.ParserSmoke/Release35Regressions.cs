@@ -76,24 +76,28 @@ internal static class Release35Regressions
         }
 
         // ---- 4. A change seen across an address rotation is still a change -----
+        // 0.8.47: fresh: false keeps this section on LidSignal's own change detection. A fresh
+        // in-case word of the remembered Pro 2 is believed on sight by the in-case door:
+        check(Classify(new LidSignal(), Packet(0x62, 0x51), 10, t),
+            "35: the in-case door refused a fresh first word of the remembered case");
         var rotate = new LidSignal();
-        check(!Classify(rotate, Packet(0x62, 0x51), 10, t),
+        check(!Classify(rotate, Packet(0x62, 0x51), 10, t, fresh: false),
             "35: an unlearned signature was believed on sight");
-        check(Classify(rotate, Packet(0x62, 0x59), 11, t.AddSeconds(1)),
+        check(Classify(rotate, Packet(0x62, 0x59), 11, t.AddSeconds(1), fresh: false),
             "35: a changed word across an address rotation was discarded");
 
         // A frozen copy repeating one byte for ever can never produce a change.
         var frozen = new LidSignal();
-        check(!Classify(frozen, Packet(0x63, 0x51), 20, t),
+        check(!Classify(frozen, Packet(0x63, 0x51), 20, t, fresh: false),
             "35: an unlearned signature was believed on sight");
-        check(!Classify(frozen, Packet(0x63, 0x51), 21, t.AddSeconds(1)),
+        check(!Classify(frozen, Packet(0x63, 0x51), 21, t.AddSeconds(1), fresh: false),
             "35: a repeated word across a rotation became a lid movement");
 
         // A word slept on for longer than Forget is a level, not an event.
         var slept = new LidSignal();
-        check(!Classify(slept, Packet(0x64, 0x51), 30, t),
+        check(!Classify(slept, Packet(0x64, 0x51), 30, t, fresh: false),
             "35: an unlearned signature was believed on sight");
-        check(!Classify(slept, Packet(0x64, 0x59), 31, t.AddMinutes(6)),
+        check(!Classify(slept, Packet(0x64, 0x59), 31, t.AddMinutes(6), fresh: false),
             "35: a word slept on for six minutes counted as a lid movement");
 
         Console.WriteLine("DeskPods 0.8.37: signature-table capacity and first-open regressions passed");

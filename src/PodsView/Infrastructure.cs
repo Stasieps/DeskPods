@@ -11,10 +11,16 @@ using Microsoft.Win32;
 namespace PodsView;
 
 /// <summary>
-/// Two files, one background writer.
+/// Three files, one background writer.
 ///
-///   podsview.log        what a human wants to read: start-up, popup shown/hidden, errors
-///   podsview-trace.log  one structured line per radio packet and per popup decision
+///   podsview.log            what a human wants to read: start-up, popup shown/hidden, errors
+///   podsview-trace.log      one structured line per radio packet and per popup decision
+///   podsview-trace-lid.log  0.8.47: only the lid - believed case words, show/hide, lifecycle
+///
+/// The full trace fills its 6 MB in about an hour with the earbuds in the ears (the 2026-10-09
+/// export covers 2.6 hours across both files), so a complaint about yesterday evening had no
+/// evidence left. The lid file gets a copy of the few lines that decide the popup and keeps
+/// days of them; it is exported through the same allowlist as the full trace.
 ///
 /// Until 0.8.7 every line was written straight from the caller: a lock, a directory
 /// check, a FileInfo and a file opened and closed - on the Bluetooth callback thread and
@@ -26,6 +32,7 @@ internal static class Logger
 {
     private const long MainLogLimit = 2_000_000;
     private const long TraceLogLimit = 6_000_000;
+    private const long LidLogLimit = 3_000_000;
     private const int QueueLimit = 40_000;
     private const int BatchLimit = 400_000;
 
@@ -44,6 +51,7 @@ internal static class Logger
     public static string LogDirectory { get; private set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PodsView", "Logs");
     public static string LogPath => Path.Combine(LogDirectory, "podsview.log");
     public static string TracePath => Path.Combine(LogDirectory, "podsview-trace.log");
+    public static string LidTracePath => Path.Combine(LogDirectory, "podsview-trace-lid.log");
 
     internal static void UseDirectoryForVerification(string directory)
     {
@@ -95,17 +103,20 @@ internal static class Logger
     {
         var main = new StringBuilder();
         var trace = new StringBuilder();
+        var lid = new StringBuilder();
         while (true)
         {
             Signal.WaitOne(500);
             main.Clear();
             trace.Clear();
+            lid.Clear();
             long completed = System.Threading.Interlocked.Read(ref _written);
             while (Pending.TryDequeue(out var line))
             {
                 completed = line.Sequence;
                 StringBuilder target = line.Trace ? trace : main;
                 target.Append(line.Text).Append(Environment.NewLine);
+                if (line.Trace && IsLidLine(line.Text)) lid.Append(line.Text).Append(Environment.NewLine);
                 if (main.Length + trace.Length > BatchLimit) break;
             }
 
@@ -118,12 +129,33 @@ internal static class Logger
             {
                 if (main.Length > 0) Append(LogPath, main.ToString(), MainLogLimit);
                 if (trace.Length > 0) Append(TracePath, trace.ToString(), TraceLogLimit);
+                if (lid.Length > 0) Append(LidTracePath, lid.ToString(), LidLogLimit);
                 System.Threading.Interlocked.Exchange(ref _written, completed);
             }
 
             if (!Pending.IsEmpty) { Signal.Set(); continue; }
             if (_stopping) return;
         }
+    }
+
+    /// <summary>
+    /// 0.8.47: the lines that decide the popup. A case line only when the classifier believed
+    /// it or the lid machine acted on it, and an air line only when it came from inside the
+    /// case - the earbuds in the ears send one every second all day and say nothing about it.
+    /// </summary>
+    internal static bool IsLidLine(string text)
+    {
+        if (text.Length < 25) return false;
+        string body = text[24..];
+        if (body.StartsWith("show ", StringComparison.Ordinal) || body.StartsWith("hide ", StringComparison.Ordinal)
+            || body.StartsWith("lifecycle ", StringComparison.Ordinal) || body.StartsWith("session ", StringComparison.Ordinal)
+            || body.StartsWith("sys ", StringComparison.Ordinal) || body.StartsWith("gap ", StringComparison.Ordinal))
+            return true;
+        if (body.StartsWith("case ", StringComparison.Ordinal))
+            return body.Contains(" believable=1 ", StringComparison.Ordinal) || !body.Contains(" action=None ", StringComparison.Ordinal);
+        if (body.StartsWith("air ", StringComparison.Ordinal))
+            return !body.Contains(" src=out-of-case ", StringComparison.Ordinal) && !body.Contains(" src=battery-only-model ", StringComparison.Ordinal);
+        return false;
     }
 
     private static void Append(string path, string text, long limit)

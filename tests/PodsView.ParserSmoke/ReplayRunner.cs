@@ -99,7 +99,8 @@ internal static class ReplayRunner
             if (!dismissed && row.Ms >= dismissMs!.Value)
             {
                 Advance(dismissMs.Value);
-                machine.ForceClosed(origin.AddMilliseconds(dismissMs.Value));
+                // 0.8.47: App calls ForceClosed only while the lid machine owns the popup.
+                if (machine.IsOpen) machine.ForceClosed(origin.AddMilliseconds(dismissMs.Value));
                 Leaves(dismissMs.Value);
                 dismissed = true;
             }
@@ -136,7 +137,8 @@ internal static class ReplayRunner
             { worstShow = Math.Max(worstShow, row.Ms - pending); pendingShow = null; }
             if (action == LidAction.Close) { hides++; Leaves(row.Ms); }
         }
-        Advance(rows[^1].Ms + (int)LidStateMachine.WakeQuiet.TotalMilliseconds + 1000);
+        // 0.8.47: StreamTimeout (10 s) is the longest tail, so let every timer run out.
+        Advance(rows[^1].Ms + (int)LidStateMachine.StreamTimeout.TotalMilliseconds + 1000);
         if (visibleSince is not null) lives.Add(double.PositiveInfinity);
         if (pendingShow is not null) worstShow = double.PositiveInfinity;
         if (pendingHide is not null) worstHide = double.PositiveInfinity;

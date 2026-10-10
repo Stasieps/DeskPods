@@ -110,12 +110,15 @@ public partial class App : System.Windows.Application
         // shortcut without a second hidden window.
         _hotkeys = new HotkeyService(_casePopup, () => Dispatcher.InvokeAsync(ShowCardManually));
         _hotkeyUnavailable = !_hotkeys.Rebind(Settings.ShowCardHotkey);
-        // Dismissing the popup by hand counts as a closed lid, so no later packet revives it.
+        // Dismissing the popup by hand finishes the open cycle, so no later packet revives it.
+        // 0.8.47: only a card the lid machine owns. A card shown by hand (shortcut, tray) has
+        // no cycle behind it, and burying one anyway swallowed the next real opening.
         _casePopup.Dismissed += () =>
         {
-            _lid.ForceClosed(DateTimeOffset.UtcNow);
+            bool owned = _lid.IsOpen;
+            if (owned) _lid.ForceClosed(DateTimeOffset.UtcNow);
             _cycleFirstOpenAt = default;
-            Logger.Info("Popup hidden: closed by hand, so this cycle is finished");
+            Logger.Info(owned ? "Popup hidden: closed by hand, so this cycle is finished" : "Card closed by hand");
             Logger.Trace("hide reason=user-dismissed");
         };
 
@@ -340,14 +343,11 @@ public partial class App : System.Windows.Application
     /// arrived. When no fresh case packet is available, this is a way to
     /// see the numbers at that moment. It reads the lid machine but never drives it.
     /// </summary>
-    internal void ShowCardManually() => ShowCardManually(null);
-
-    /// <summary>0.8.46: the low-battery card names the channel that raised it and keeps it blinking.</summary>
-    private void ShowCardManually(string? alertKey)
+    internal void ShowCardManually()
     {
         if (_casePopup is null) return;
         string name = _monitor?.CurrentStatus.DeviceName ?? "AirPods";
-        _casePopup.ShowManual(_lastData, name, alertKey);
+        _casePopup.ShowManual(_lastData, name);
         Logger.Info(_lastData is null
             ? "Card shown by hand, but no packet has been seen yet, so the numbers are empty"
             : "Card shown by hand");
@@ -367,7 +367,6 @@ public partial class App : System.Windows.Application
             };
         }
         _manualCardTimer.Stop();
-        _manualCardTimer.Interval = TimeSpan.FromSeconds(alertKey is null ? 6 : 10);
         _manualCardTimer.Start();
     }
 
@@ -563,7 +562,9 @@ public partial class App : System.Windows.Application
                 if (!packet.Data.IsCaseOpen)
                 {
                     int silentMs = _lid.LastSilenceMs;
-                    Logger.Info($"The case broke {(silentMs < 0 ? -1 : silentMs / 1000)} s of silence with the state it had before going quiet (lid 0x{packet.Data.LidByte:X2}), so the popup is shown now instead of waiting for the case to say it again");
+                    Logger.Info(silentMs < 0
+                        ? $"The case spoke for the first time since listening began, with a shut word (lid 0x{packet.Data.LidByte:X2}): a hand is on it, so the popup is shown now"
+                        : $"The case broke {silentMs / 1000} s of silence with the state it had before going quiet (lid 0x{packet.Data.LidByte:X2}), so the popup is shown now instead of waiting for the case to say it again");
                 }
                 Logger.Info($"Popup shown {latencyMs} ms after the first classified open packet (ShowOrUpdate call took {paint.ElapsedMilliseconds} ms)");
                 Logger.Trace($"show seq={packet.Sequence} peer={packet.TracePeer} cycle={packet.Data.LidOpenCounter} decisionMs={queueMs} latencyMs={latencyMs} paintMs={paint.ElapsedMilliseconds} queueMs={queueMs}");
@@ -645,8 +646,8 @@ public partial class App : System.Windows.Application
         Logger.Info(unconfirmed
             ? $"Popup hidden: the case woke up, never said the lid was open, and has now been quiet for {(int)LidStateMachine.WakeQuiet.TotalMilliseconds} ms"
             : saidItsPiece
-                ? $"Popup hidden: the case said everything in its first {(int)LidStateMachine.BurstWindow.TotalSeconds}s and has been quiet for {(int)LidStateMachine.QuietTail.TotalSeconds}s - an empty case has nothing more to say, so the popup goes (it returns if the case speaks again)"
-                : $"Popup hidden: the case has said nothing for {(int)LidStateMachine.StreamTimeout.TotalSeconds}s (it comes back by itself if the lid is still open)");
+                ? $"Popup hidden: the case has been quiet for {(int)LidStateMachine.QuietTail.TotalSeconds}s within the first {(int)LidStateMachine.BurstWindow.TotalSeconds}s of the popup; this cycle is spent, the next opening shows it again"
+                : $"Popup hidden: the case has said nothing for {(int)LidStateMachine.StreamTimeout.TotalSeconds}s; this cycle is spent, the next opening shows it again");
         Logger.Trace($"hide reason={(unconfirmed ? "wake-quiet" : saidItsPiece ? "quiet-tail" : "silence")} {state}");
         _casePopup?.HideForSignalTimeout();
     }
@@ -660,8 +661,8 @@ public partial class App : System.Windows.Application
         Logger.Info("--------------------------------------------------------------");
         Logger.Info($"DeskPods v{Version} starting on Windows {Environment.OSVersion.Version} ({(Environment.Is64BitProcess ? "x64" : "x86")})");
         Logger.Info($"Settings: language={Settings.Language} theme={Settings.Theme} startup={Settings.StartWithWindows} minimized={Settings.StartMinimized} tray={Settings.MinimizeToTray} lowBattery={Settings.LowBatteryNotifications}@{Settings.LowBatteryThreshold} nearby={Settings.AllowNearbyWhenDisconnected} revision={Settings.SettingsRevision}");
-        Logger.Info($"Popup rules: every believable packet from the followed case is eligible immediately; no packet-count proof or reopen lockout; silence={(int)LidStateMachine.StreamTimeout.TotalSeconds}s, or {(int)LidStateMachine.QuietTail.TotalSeconds}s when the case said everything in its first {(int)LidStateMachine.BurstWindow.TotalSeconds}s and went mute, both resumable; watchdog=250ms");
-        Logger.Info($"Wake-up rules: the first case word after {(int)LidStateMachine.WakeSilenceSeconds}s of silence shows the popup whatever it says, its own repeats cannot take it away, it ends {(int)LidStateMachine.WakeQuiet.TotalMilliseconds} ms after the case stops talking; every other closed word still hides the popup at once");
+        Logger.Info($"Popup rules: a fresh open word from the followed case shows the popup at once (one without a radio timestamp needs a second); a closed word hides it at once; silence hides it after {(int)LidStateMachine.QuietTail.TotalSeconds}s within the first {(int)LidStateMachine.BurstWindow.TotalSeconds}s, {(int)LidStateMachine.StreamTimeout.TotalSeconds}s after that, and that cycle is then spent (no pop-back); watchdog=250ms");
+        Logger.Info($"Wake-up rules: the first case word after {(int)LidStateMachine.WakeSilenceSeconds}s of silence, or the first since listening began, shows the popup whatever it says; its own repeats cannot take it away; it ends {(int)LidStateMachine.WakeQuiet.TotalMilliseconds} ms after the case stops talking unless the case confirms the lid is open; a spent cycle never wakes");
         Logger.Info($"Packet trace: {Logger.TracePath}");
         var parts = (typeof(App).Assembly.GetName().Version ?? new System.Version(0, 0, 0));
         Logger.Trace($"session start v{Version} major={parts.Major} minor={parts.Minor} patch={parts.Build}");
@@ -707,11 +708,11 @@ public partial class App : System.Windows.Application
         _tray.ShowBalloonTip(8000, Localization.T("lowBatteryTitle") + " · " + low.Label,
             string.Format(Localization.T("lowBatteryBody"), low.Label, BatteryFormat.Percent(battery), Settings.LowBatteryThreshold),
             Forms.ToolTipIcon.Warning);
-        // 0.8.41: a low earbud also raises the card by itself for a few seconds (the manual
-        // card timer), once per discharge like the balloon above. 0.8.46: the card names the
-        // channel in its header and that channel blinks red.
+        // 0.8.47: the balloon is the whole alert. 0.8.41 also raised the card by itself for a
+        // low earbud, and in the 2026-10-09 trace that was the only popup of the night - at
+        // 00:37:40, with the case shut on the desk: a card nobody asked for. The window the
+        // balloon opens still blinks the low row.
         Logger.Info($"Low battery alert: {low.Key} {BatteryFormat.Percent(battery)} threshold {Settings.LowBatteryThreshold} %");
-        if (low.Key is "left" or "right") ShowCardManually(low.Key);
     }
 
     private void OnBalloonClicked(BalloonAction action)

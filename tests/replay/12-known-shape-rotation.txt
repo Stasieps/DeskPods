@@ -7,8 +7,11 @@
 !paired 1
 !connected 0
 !nearby 1
-!expect shows 5
-!expect hides 4
+# 0.8.47: plus the first opening of the recording (open c1 at 0 ms, shut c1 at 1.54 s),
+# and the last opening (c2 at 75.0 s) is now taken down by the 6 s quiet tail before the
+# replay ends: 5 closes + 1 quiet tail = 6 hides.
+!expect shows 6
+!expect hides 6
 !expect show-within-ms 1500
 p 0 4B45E954BDBB -69 2 1 1 071901142024FA93110000C512EF4951FD6F082992307482F66982
 p 481 4B45E954BDBB -65 2 1 1 071901142024FA93110000C512EF4951FD6F082992307482F66982

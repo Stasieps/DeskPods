@@ -31,6 +31,8 @@ namespace PodsView;
 //    that fixture raises a popup that never physically happened. 32.1 s against 40.9 s
 //    leaves no honest threshold, so the gate stays at 120 s and the first opening is
 //    rescued by the signature table instead.
+// 0.8.47 replaces the cold-profile door (0x39/0x49 after ColdQuiet) by the in-case door in
+// Believe below: see the comment there for the evidence and for what it costs.
 internal static class CaseSignalClassifier
 {
     /// <summary>Observed raw-shape silence that separates a moved case from a continuous stream.</summary>
@@ -58,15 +60,27 @@ internal static class CaseSignalClassifier
         if (!DeviceCatalog.HasLidProtocol(data.ModelCode)) { source = "battery-only-model"; return false; }
         // 0.8.41: an earbud outside the case does not know the lid.
         if (OutsideCase(data)) { source = "out-of-case"; return false; }
-        // A fresh packet from the remembered, bound case is already the event the user
-        // is waiting for. Do not make the first opening wait for 120 seconds of profile
-        // history or for a second advertisement. The old profile gate is retained only
-        // for non-explicit packets; the fast path is limited to packets that carry the
-        // case/lid field and have a usable radio timestamp.
-        bool profile = provenFresh && rememberedPair && data.CarriesLidState
-            || provenFresh && rememberedPair && observedQuiet > ColdQuiet
-                && MatchesPro2CaseProfile(data);
-        return memory.Believe(address,data.Identity,data.LidByte,data.CarriesLidState,now,out source,validatedCaseProfile:profile,caseSide:true);
+        // LidSignal keeps learning exactly as before (explicit, change, rotate-change, known).
+        if (memory.Believe(address,data.Identity,data.LidByte,data.CarriesLidState,now,out source,caseSide:true)) return true;
+        // 0.8.47: the in-case door. A fresh packet from the remembered, bound AirPods Pro 2,
+        // sent from inside the case (bit 6 or bit 2 of byte 5), is the lid speaking. Waiting
+        // for LidSignal to learn its shape is what kept the first opening off the screen: in
+        // the safe export replay-safe/22 the open words of a charging case were discarded as
+        // baseline/static and the popup only appeared on the close word. The guards that made
+        // the old profile door safe stay: trusted, bound, a usable RSSI, a radio timestamp
+        // proven seconds new, the remembered pair and exactly model 0x1420. An earbud outside
+        // the case was refused above (0.8.41). What this costs, measured on the 21 recorded
+        // sessions: fixture 06 shows its lone 0x11 word for the quiet tail (a lone word cannot
+        // be told from a real one - fixtures 01, 08, 14, 15 and 18 open with exactly that),
+        // and fixture 13's sparse stream shows once and is then spent (LidStateMachine).
+        // Other models keep the learned path until a recording of theirs proves the same.
+        // observedQuiet and the cold profile below are kept for the callers and the tests.
+        if (provenFresh && rememberedPair && data.ModelCode == 0x1420 && data.Identity != 0)
+        {
+            source = "in-case";
+            return true;
+        }
+        return false;
     }
 }
 internal sealed class CaseProfileHistory
