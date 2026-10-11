@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Model of the popup logic (0.8.7, mirrored up to 0.8.47), replayed against the shape of a real capture.
+"""Model of the popup logic (0.8.7, mirrored up to 0.8.48), replayed against the shape of a real capture.
 
 The capture that produced this design (three minutes, 401 packets, one pair of
 AirPods Pro 2) contained two transmitters sharing one identity:
@@ -29,6 +29,11 @@ TIMEOUT = 10.0
 # put down, it goes 6 s after the last word.
 QUIET_TAIL = 6.0
 BURST_WINDOW = 20.0
+# 0.8.48 (LidStateMachine.HalfAwakeTail): a popup that only ever heard a half-awake earbud -
+# byte 5 with bit 2 but without bit 6, 0x04/0x24 - leaves 3.5 s after the last word. Such an
+# earbud can say "open" two or three times and never say "shut" (2026-10-11 00:49:47). Not
+# less: fixture 07 is silent for 2.93 s between half-awake and full words of one open lid.
+HALF_TAIL = 3.5
 # 0.8.47: a cycle that left the screen without a close is SPENT - its lid is very probably
 # still open, so its words may not pop the card back up (no pop-back). The hold follows the
 # stream across an address rotation while it has not paused for longer than SPENT_WINDOW,
@@ -51,10 +56,17 @@ WAKE_MEASURE = 20.0
 # 0.8.47: 2.5 -> 6 s (LidStateMachine.WakeQuiet): the real open word came 4.4-5.4 s
 # after the wake-up in the recordings, and 2.5 s took the card away before it.
 WAKE_QUIET = 6.0
+# 0.8.48: only a shut word with counter 0 wakes. The earbud counts openings from zero after
+# it wakes up, so "shut, counter >= 1" is a lid already opened and shut again.
+
+
+def half_awake(identity):
+    """Mirror of CaseSignalClassifier.HalfAwake: byte 5 with bit 2 and without bit 6."""
+    return identity != 0 and ((identity >> 16) & 0x44) == 0x04
 
 
 class Lid:
-    """Mirror of LidStateMachine (0.8.47)."""
+    """Mirror of LidStateMachine (0.8.48)."""
 
     def __init__(self, lockout=LOCKOUT):
         self.lockout = min(lockout, MAX_LOCKOUT)
@@ -82,6 +94,7 @@ class Lid:
         self.cycle_shown = None
         self.raw_opens = {}
         self.closing_edge = False
+        self.full_word_seen = False
 
     def clear_spent(self):
         self.spent_cycle, self.spent_addr, self.spent_at, self.spent_by_hand = -1, None, None, False
@@ -90,7 +103,7 @@ class Lid:
         self.spent_cycle, self.spent_addr, self.spent_at, self.spent_by_hand = cycle, addr, now, by_hand
 
     def handle(self, carries, is_open, cycle, addr, now, trusted=True, bound=True, proven_fresh=False,
-               explicit_lid=False):
+               explicit_lid=False, half=False):
         self.closing_edge = False
         if not bound or not trusted:
             return 'none'
@@ -108,6 +121,9 @@ class Lid:
         self.closing_edge = observed_closing_edge
         if not carries:
             return 'none'
+        # 0.8.48: one word of a properly awake earbud ends the half-awake tail.
+        if not half:
+            self.full_word_seen = True
         # 0.8.47: silence since the case's own last word. Before its first word since start
         # or an OS reset it is unknown, and unknown counts as long.
         heard_before = self.last_case is not None
@@ -134,10 +150,11 @@ class Lid:
                 return 'update'
             # The wake-up door: the case broke a silence, so a hand moved it. Not after a
             # spent cycle - its own counter never wakes, and no counter does for SPENT_WINDOW.
+            # 0.8.48: and only on counter 0 - counter >= 1 is a lid already opened and shut.
             spent_hold = spent or (self.spent_cycle >= 0 and self.spent_at is not None
                                    and 0 <= now - self.spent_at <= SPENT_WINDOW)
             if (not self.open and proven_fresh and since_case >= WAKE_SILENCE
-                    and not observed_closing_edge and not spent_hold):
+                    and not observed_closing_edge and not spent_hold and cycle == 0):
                 self.open = True
                 self.cycle_shown = now
                 self.streak = MIN_STREAK
@@ -149,6 +166,7 @@ class Lid:
                 self.wake_open = now
                 self.wake_cycle = cycle
                 self.wake_unconfirmed = True
+                self.full_word_seen = not half
                 self.closed_at = None
                 self.closed_cycle = -1
                 return 'open'
@@ -199,6 +217,7 @@ class Lid:
             self.live_cycle, self.live_addr = cycle, addr
             self.last_open = now
             self.wake_unconfirmed = False
+            self.full_word_seen = not half
             self.closed_at = None
             self.closed_cycle = -1
             return 'open'
@@ -234,6 +253,7 @@ class Lid:
         self.clear_spent()
         self.live_cycle, self.live_addr = cycle, addr
         self.wake_unconfirmed = False
+        self.full_word_seen = not half
         self.closed_at = None
         self.closed_cycle = -1
         return 'open'
@@ -243,8 +263,15 @@ class Lid:
         return (self.cycle_shown is not None and self.last_case is not None
                 and self.last_case - self.cycle_shown <= BURST_WINDOW)
 
+    def half_only(self):
+        """Mirror of LidStateMachine.HalfAwakeOnly (0.8.48)."""
+        return (self.open and not self.full_word_seen and not self.wake_unconfirmed
+                and self.said_its_piece())
+
     def tail(self):
         """How much silence this popup is allowed: short for a mute case, full for a talker."""
+        if self.half_only():
+            return HALF_TAIL
         return QUIET_TAIL if self.said_its_piece() else TIMEOUT
 
     def timed_out(self, now):
@@ -270,11 +297,14 @@ class Lid:
         """When the watchdog next has something to do, or None."""
         if not self.open:
             return None
+        # 0.8.48: both timers of ShouldTimeout, as in C#. The tail since the last open word
+        # also bounds an unconfirmed wake-up whose stale word keeps repeating.
+        due = []
         if self.wake_unconfirmed and self.last_case is not None:
-            return self.last_case + WAKE_QUIET
+            due.append(self.last_case + WAKE_QUIET)
         if self.last_open is not None:
-            return self.last_open + self.tail()
-        return None
+            due.append(self.last_open + self.tail())
+        return min(due) if due else None
 
     def tick(self, now):
         """App's 250 ms watchdog: ends an unconfirmed wake-up, or a cycle gone quiet."""
@@ -287,8 +317,9 @@ class Lid:
                 self.end_unconfirmed_wake(due)
                 done.append(('wake-quiet', due))
             else:
+                kind = 'half-tail' if self.half_only() else 'silence'
                 self.suspend_for_silence(due)
-                done.append(('silence', due))
+                done.append((kind, due))
 
     def suspend_for_silence(self, now):
         """Silence hides the popup without burying the cycle; 0.8.47 marks it spent."""
@@ -470,7 +501,11 @@ check(lid.handle(True, True, 3, CASE_A, 0.2) == 'open', 'the popup must appear i
 lid = Lid()
 # 0.8.47: the first word a session hears breaks an unknown silence, and unknown counts as
 # long - after start, boot or unlock the first movement of the case shows at once.
-check(lid.handle(True, False, 4, CASE_A, 0.0, proven_fresh=True) == 'open',
+# 0.8.48: the wake-up needs counter 0. The earbud counts openings from zero after it wakes
+# up, so a first word "shut, counter 4" is a lid already opened and shut: nothing to show.
+check(Lid().handle(True, False, 4, CASE_A, 0.0, proven_fresh=True) == 'none',
+      'a first word "shut, counter 4" is a lid already opened and shut, not a wake-up')
+check(lid.handle(True, False, 0, CASE_A, 0.0, proven_fresh=True) == 'open',
       'the first word a session hears must wake the popup')
 check(lid.tick(0.0 + WAKE_QUIET + 0.1) and not lid.open,
       'an unconfirmed first-word wake ends when the case stops talking')
@@ -503,11 +538,25 @@ check(lid.handle(True, False, 1, CASE_A, 102.0, proven_fresh=True, explicit_lid=
 # (wakeMs=-1 on every trace line). Four openings after silences of 73 s, 514 s, 2395 s and
 # 6865 s produced no popup at all, and two of those bursts contained no open word at all -
 # 19 and 27 closed words in a row - so there was nothing else left to wait for.
+# 0.8.48: with counter 0 - see the wake-up door.
 lid = Lid()
-lid.handle(True, False, 3, CASE_A, 0.0, proven_fresh=True, explicit_lid=True)
+lid.handle(True, False, 0, CASE_A, 0.0, proven_fresh=True, explicit_lid=True)
 lid.tick(10.0)  # 0.8.47: that first word woke the popup; let the watchdog end it
-check(lid.handle(True, False, 3, CASE_A, 100.0, proven_fresh=True, explicit_lid=True) == 'open',
+check(lid.handle(True, False, 0, CASE_A, 100.0, proven_fresh=True, explicit_lid=True) == 'open',
       'an explicit word after a long silence is the case waking up, not reporting a shut lid')
+
+# 0.8.48: the bursts of 2026-10-11 at 19:49:54, 23:53:40 and 00:07:05 - "shut, counter 1"
+# as the first word of a freshly woken earbud. The lid was opened and shut again before
+# the earbud could say so, and the card that word raised sat on a shut case for 3.7-6.1 s.
+for counter in range(1, 8):
+    lid = Lid()
+    lid.handle(True, False, 0, CASE_A, 0.0, proven_fresh=True)
+    lid.tick(10.0)
+    check(lid.handle(True, False, counter, CASE_B, 100.0, proven_fresh=True, explicit_lid=True) == 'none'
+          and not lid.open,
+          'a shut word with counter %d after a long silence may not wake the popup' % counter)
+    check(lid.handle(True, True, (counter + 1) & 7, CASE_B, 100.5, proven_fresh=True) == 'open',
+          'the opening after it still shows at once (counter %d)' % counter)
 
 # The one case that is left alone: the popup was lost to silence with the lid open, so the
 # hand on the case may be shutting it. 0.8.47: that cycle is spent - its own shut word never
@@ -526,12 +575,12 @@ check(lid.handle(True, False, 2, CASE_A, 30.0 + SPENT_WINDOW + 10.0, proven_fres
 lid = Lid()
 lid.handle(True, True, 2, CASE_A, 0.0, proven_fresh=True)
 lid.suspend_for_silence(30.0)
-check(lid.handle(True, False, 3, CASE_A, 60.0, proven_fresh=True) == 'none',
+check(lid.handle(True, False, 0, CASE_A, 60.0, proven_fresh=True) == 'none',
       'no shut word may wake anything within SPENT_WINDOW of a spent popup')
 lid = Lid()
 lid.handle(True, True, 2, CASE_A, 0.0, proven_fresh=True)
 lid.suspend_for_silence(30.0)
-check(lid.handle(True, False, 3, CASE_A, 30.0 + SPENT_WINDOW + 10.0, proven_fresh=True) == 'open',
+check(lid.handle(True, False, 0, CASE_A, 30.0 + SPENT_WINDOW + 10.0, proven_fresh=True) == 'open',
       'past SPENT_WINDOW another counter breaking a silence is a wake-up again')
 
 # Inside a burst the packets are a fraction of a second apart, so nothing there may wake.
@@ -555,9 +604,9 @@ check(lid.handle(True, True, 2, CASE_A, 0.6, proven_fresh=True) != 'open',
 
 # A packet Windows queued cannot prove it is new, so it may not wake anything.
 lid = Lid()
-lid.handle(True, False, 1, CASE_A, 0.0, proven_fresh=True)
+lid.handle(True, False, 0, CASE_A, 0.0, proven_fresh=True)
 lid.tick(10.0)  # 0.8.47: that first word woke the popup; let the watchdog end it
-check(lid.handle(True, False, 1, CASE_A, 100.0, proven_fresh=False) == 'none',
+check(lid.handle(True, False, 0, CASE_A, 100.0, proven_fresh=False) == 'none',
       'a packet that cannot prove its age must not wake the popup')
 
 # A session that starts while the case is off the air: the earbuds chatter, the case says
@@ -565,20 +614,75 @@ check(lid.handle(True, False, 1, CASE_A, 100.0, proven_fresh=False) == 'none',
 # were followed by a real opening within 2.2 s.
 lid = Lid()
 lid.handle(False, False, 0, EARBUD, 0.0)
-check(lid.handle(True, False, 5, CASE_A, 25.0, proven_fresh=True) == 'open',
+check(lid.handle(True, False, 0, CASE_A, 25.0, proven_fresh=True) == 'open',
       'a case silent through the first 25 s of a session is waking, not settling')
 
 # 0.8.47: earbud packets carry no lid and measure no silence, so the case's first word still
 # wakes; five seconds of quiet AFTER the case has spoken is normal and may not.
 lid = Lid()
 lid.handle(False, False, 0, EARBUD, 0.0)
-check(lid.handle(True, False, 5, CASE_A, 5.0, proven_fresh=True) == 'open' and lid.last_silence is None,
+check(lid.handle(True, False, 0, CASE_A, 5.0, proven_fresh=True) == 'open' and lid.last_silence is None,
       'earbud chatter measured a silence for the case')
 lid = Lid()
-lid.handle(True, True, 5, CASE_A, 0.0, proven_fresh=True)
-lid.handle(True, False, 5, CASE_A, 1.0, proven_fresh=True)
-check(lid.handle(True, False, 5, CASE_A, 6.0, proven_fresh=True) == 'none',
+lid.handle(True, True, 0, CASE_A, 0.0, proven_fresh=True)
+lid.handle(True, False, 0, CASE_A, 1.0, proven_fresh=True)
+check(lid.handle(True, False, 0, CASE_A, 6.0, proven_fresh=True) == 'none',
       'five seconds of quiet is normal between bursts and may not wake anything')
+
+# 0.8.48: the half-awake tail (LidStateMachine.HalfAwakeTail). 2026-10-11 00:49:47: three
+# open words from a half-awake earbud in 0.14 s, then nothing, and the lid was shut.
+lid = Lid()
+check(lid.handle(True, True, 1, CASE_A, 0.0, proven_fresh=True, half=True) == 'open',
+      'a half-awake open word shows the popup at once')
+lid.handle(True, True, 1, CASE_A, 0.14, proven_fresh=True, half=True)
+check(lid.half_only() and lid.tail() == HALF_TAIL, 'only half-awake words: the half tail')
+check(not lid.timed_out(0.14 + HALF_TAIL - 0.05), 'the half tail may not be cut short')
+check(lid.timed_out(0.14 + HALF_TAIL + 0.05), 'a popup that only heard a half-awake earbud goes after HALF_TAIL')
+check(lid.tick(0.14 + HALF_TAIL + 0.3) == [('half-tail', 0.14 + HALF_TAIL)] and not lid.open,
+      'the watchdog reports the half tail')
+check(lid.handle(True, True, 1, CASE_A, 5.0, proven_fresh=True) == 'none',
+      'the half-tailed cycle is spent like any other: its own words do not bring it back')
+check(lid.handle(True, True, 2, CASE_A, 6.0, proven_fresh=True, half=True) == 'open',
+      'the next opening shows at once')
+# Fixture 07: an open lid is silent for 2.93 s between its half-awake and its first full word.
+lid = Lid()
+lid.handle(True, True, 1, CASE_A, 0.0, proven_fresh=True, half=True)
+lid.handle(True, True, 1, CASE_A, 0.71, proven_fresh=True, half=True)
+check(not lid.timed_out(0.71 + 2.93), 'the measured 2.93 s pause of an open lid is inside the half tail')
+lid.handle(True, True, 1, CASE_A, 0.71 + 2.93, proven_fresh=True)
+check(not lid.half_only() and lid.tail() == QUIET_TAIL, 'one full word ends the half tail')
+check(not lid.timed_out(0.71 + 2.93 + HALF_TAIL + 0.5), 'after a full word the half tail no longer applies')
+check(lid.timed_out(0.71 + 2.93 + QUIET_TAIL + 0.05), 'after a full word the quiet tail applies')
+# A full first word and half words after it: not half-only.
+lid = Lid()
+lid.handle(True, True, 1, CASE_A, 0.0, proven_fresh=True)
+lid.handle(True, True, 1, CASE_A, 0.2, proven_fresh=True, half=True)
+check(not lid.half_only() and not lid.timed_out(0.2 + HALF_TAIL + 0.5),
+      'a popup that heard one full word keeps the quiet tail')
+# A wake-up the case has not confirmed keeps WAKE_QUIET, whatever its word.
+lid = Lid()
+check(lid.handle(True, False, 0, CASE_A, 0.0, proven_fresh=True, half=True) == 'open', 'half-awake wake-up')
+check(not lid.half_only() and not lid.timed_out(HALF_TAIL + 0.5),
+      'an unconfirmed wake-up is not cut short by the half tail')
+check(lid.timed_out(WAKE_QUIET + 0.05), 'an unconfirmed wake-up still ends after WAKE_QUIET')
+# Past BURST_WINDOW the case has proven it keeps talking: the ten-second tail.
+lid = Lid()
+lid.handle(True, True, 1, CASE_A, 0.0, proven_fresh=True, half=True)
+t = 0.0
+while t < BURST_WINDOW + 2.0:
+    t += 2.0
+    lid.handle(True, True, 1, CASE_A, t, proven_fresh=True, half=True)
+check(not lid.half_only() and lid.tail() == TIMEOUT and not lid.timed_out(t + HALF_TAIL + 1.0),
+      'a half-awake earbud still talking past BURST_WINDOW keeps the full timeout')
+# A half-awake close still closes at once.
+lid = Lid()
+lid.handle(True, True, 1, CASE_A, 0.0, proven_fresh=True, half=True)
+check(lid.handle(True, False, 1, CASE_A, 1.65, proven_fresh=True, half=True) == 'close',
+      'a half-awake shut word closes the popup at once (fixture 18)')
+check(half_awake(0x04F895) and half_awake(0x24FA95) and not half_awake(0x73FA95)
+      and not half_awake(0x538A93) and not half_awake(0x22FA95) and not half_awake(0x02F88F)
+      and not half_awake(0),
+      'half awake is byte 5 with bit 2 and without bit 6')
 
 # 9. The lid stays open but the case goes quiet for half a minute. The popup goes away,
 # and 0.8.47 keeps it away: the cycle is spent, so a case lying open may not pop the card
@@ -1114,7 +1218,7 @@ def run_fixture(fixture):
         action = lid.handle(believe, data['is_open'], data['counter'], addr, now,
                             trusted=trusted, bound=bound,
                             proven_fresh=0 <= age <= INSTANT_AGE_MS,
-                            explicit_lid=data['carries'])
+                            explicit_lid=data['carries'], half=half_awake(identity))
         if action == 'open':
             shows.append(now)
             if state['visible_since'] is None:

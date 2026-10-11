@@ -49,6 +49,14 @@ internal static class CaseSignalClassifier
     internal static bool OutsideCase(ParsedAirPodsData data) =>
         data.Identity != 0 && ((data.Identity >> 16) & 0x44) == 0;
 
+    // 0.8.48: an earbud in the case that has not woken up properly. Byte 5 has bit 2 without
+    // bit 6 - 0x04 and 0x24 in every recording, always with one battery unknown - while an
+    // earbud that is awake in the case sets bit 6 (0x53, 0x55, 0x71, 0x73). Such a word is
+    // the lid speaking and is believed like any other, but the earbud may fall silent again
+    // without ever saying the lid was shut: see LidStateMachine.HalfAwakeTail.
+    internal static bool HalfAwake(ParsedAirPodsData data) =>
+        data.Identity != 0 && ((data.Identity >> 16) & 0x44) == 0x04;
+
     internal static bool MatchesPro2CaseProfile(ParsedAirPodsData data) =>
         data.ModelCode == 0x1420 && data.Identity != 0
         && LidSignal.Shape(data.Identity) is 0x39 or 0x49;

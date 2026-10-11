@@ -347,5 +347,6 @@ Release31Regressions.Run(Expect);
 Release33Regressions.Run(Expect);
 Release34Regressions.Run(Expect);
 Release35Regressions.Run(Expect);
+Release48Regressions.Run(Expect);
 ReplayRunner.Run(Expect);
 Console.WriteLine($"PodsView smoke tests: PASS ({checks} assertions; real C# sources, simulated radio/time)");

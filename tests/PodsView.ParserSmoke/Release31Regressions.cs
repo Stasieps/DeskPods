@@ -93,18 +93,19 @@ internal static class Release31Regressions
         check(manual.Handle(true,true,1,1,t.AddHours(3),provenFresh:true)==LidAction.None,
             "31: profile/reset changes reopened deliberately dismissed same cycle");
         // OS reset is NOT manual dismissal; establish the actual new listening epoch.
+        // 0.8.48: counter 0, because only a shut word with counter 0 wakes the popup.
         var system = new LidStateMachine();
-        system.Handle(true,true,1,1,t,provenFresh:true); system.ForceClosed(t.AddSeconds(1));
+        system.Handle(true,true,0,1,t,provenFresh:true); system.ForceClosed(t.AddSeconds(1));
         system.ResetForSystem(t.AddSeconds(2)); system.BeginListening(t.AddSeconds(2),t.AddSeconds(2));
-        check(system.Handle(true,false,1,1,t.AddHours(3),provenFresh:true)==LidAction.Open,
+        check(system.Handle(true,false,0,1,t.AddHours(3),provenFresh:true)==LidAction.Open,
             "31: OS reset falsely retained manual dismissal");
-        system.Handle(true,true,2,1,t.AddHours(3).AddMilliseconds(10),provenFresh:true);
-        check(system.Handle(true,false,2,1,t.AddHours(3).AddMilliseconds(20),provenFresh:true)==LidAction.Close,
+        system.Handle(true,true,1,1,t.AddHours(3).AddMilliseconds(10),provenFresh:true);
+        check(system.Handle(true,false,1,1,t.AddHours(3).AddMilliseconds(20),provenFresh:true)==LidAction.Close,
             "31: close after reset waited for wake floor");
         // 0.8.47: after an OS reset (boot, unlock) the silence is unknown, and unknown counts
         // as long, so the case's first word wakes the popup at once.
         var cold = new LidStateMachine(); cold.ResetForSystem(t);
-        check(cold.Handle(true,false,1,1,t.AddHours(3),provenFresh:true)==LidAction.Open && cold.LastSilenceMs < 0,
+        check(cold.Handle(true,false,0,1,t.AddHours(3),provenFresh:true)==LidAction.Open && cold.LastSilenceMs < 0,
             "31: the first word after an OS reset did not wake the popup");
 
         // Missing-cycle sequence in the supplied SAFE diagnostic export: keep it missing.

@@ -3,7 +3,7 @@ using System.Linq;
 namespace PodsView;
 
 /// <summary>
-/// Five interchangeable looks. A theme swaps the palette, the accent and the dot
+/// Four interchangeable looks. A theme swaps the palette, the accent and the dot
 /// pattern only: the measured geometry stays untouched, so no layout can break.
 ///
 /// 0.8.18 adds two things. The popup card, its rim and its glow are palette entries
@@ -15,13 +15,17 @@ namespace PodsView;
 /// 0.8.47 removes TERMINAL, CARBON and NEON (the user dropped them). A saved
 /// setting that still names one of them falls back to REFINED through
 /// AppSettings.NormalizeTheme, so nobody is left on a missing palette.
+///
+/// 0.8.48 removes E-INK the same way and gives the four that are left plain names of
+/// one kind: Refined, Classic, Glass, Swiss. Only the labels changed; the ids saved in
+/// settings.json stay "refined", "mono", "glass" and "swiss".
 /// </summary>
 internal static class ThemeManager
 {
     internal sealed class Palette
     {
         public string Id = "mono";
-        public string Label = "MONO+";
+        public string Label = "Classic";
         public string Canvas = "#050506";
         public string Surface = "#08090A";
         public string Raised = "#101113";
@@ -57,7 +61,7 @@ internal static class ThemeManager
     {
         new Palette
         {
-            Id = "refined", Label = "Refined + Case",
+            Id = "refined", Label = "Refined",
             Canvas = "#090A0B", Surface = "#111315", Raised = "#17191C", Elevated = "#202328",
             Hairline = "#24272B", Border = "#555B64", TagBorder = "#555B64",
             PrimaryText = "#F4F5F7", SecondaryText = "#AFB5BE", MutedText = "#9098A3",
@@ -65,10 +69,10 @@ internal static class ThemeManager
             PopupCanvas = "#FF090A0B", PopupRim = "#24272B", PopupGlow = "#79C99E",
             Dot = null,
         },
-        new Palette { Id = "mono", Label = "Classic - MONO+" },
+        new Palette { Id = "mono", Label = "Classic" },
         new Palette
         {
-            Id = "glass", Label = "2  GLASS",
+            Id = "glass", Label = "Glass",
             Canvas = "#0C1018", Surface = "#121620", Raised = "#1A2030", Elevated = "#223047",
             Hairline = "#2A3247", Border = "#3A4664", TagBorder = "#3A4664",
             PrimaryText = "#F2F6FF", SecondaryText = "#A8B4CC", MutedText = "#6C7A93",
@@ -78,23 +82,13 @@ internal static class ThemeManager
         },
         new Palette
         {
-            Id = "swiss", Label = "3  SWISS  (light)",
+            Id = "swiss", Label = "Swiss",
             Canvas = "#F2F0EC", Surface = "#FFFFFF", Raised = "#EAE7E1", Elevated = "#DFDBD3",
             Hairline = "#C9C4BA", Border = "#111111", TagBorder = "#111111",
             PrimaryText = "#111111", SecondaryText = "#4A4A46", MutedText = "#7A7A74",
             Accent = "#E8380D", Warn = "#B26A00", Ok = "#111111", Info = "#4A4A46", Live = "#1B7F2E",
             PopupCanvas = "#FAFFFFFF", PopupRim = "#66111111", PopupGlow = "#1B7F2E",
             Dot = null,
-        },
-        new Palette
-        {
-            Id = "eink", Label = "4  E-INK  (paper)",
-            Canvas = "#EEE9DD", Surface = "#F6F2E9", Raised = "#E4DECF", Elevated = "#D9D2C1",
-            Hairline = "#C3BBA8", Border = "#23211C", TagBorder = "#23211C",
-            PrimaryText = "#23211C", SecondaryText = "#55503F", MutedText = "#857F6C",
-            Accent = "#8A2B12", Warn = "#8A6A12", Ok = "#23211C", Info = "#55503F", Live = "#2E6B34",
-            PopupCanvas = "#FAF6F2E9", PopupRim = "#6623211C", PopupGlow = "#2E6B34",
-            Dot = "#B9B09C", DotTile = 5d, DotRadius = 0.62d,
         },
     };
 

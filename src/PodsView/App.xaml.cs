@@ -529,7 +529,7 @@ public partial class App : System.Windows.Application
         // measured from here on.
         int queueMs = (int)(DateTimeOffset.UtcNow - packet.ReceivedAt).TotalMilliseconds;
         bool wasOpen = _lid.IsOpen;
-        LidAction action = _lid.Handle(packet.LidBelievable, packet.Data.IsCaseOpen, packet.Data.LidOpenCounter, packet.BluetoothAddress, packet.ReceivedAt, packet.Trusted, packet.Bound, packet.ProvenFresh, packet.Data.CarriesLidState);
+        LidAction action = _lid.Handle(packet.LidBelievable, packet.Data.IsCaseOpen, packet.Data.LidOpenCounter, packet.BluetoothAddress, packet.ReceivedAt, packet.Trusted, packet.Bound, packet.ProvenFresh, packet.Data.CarriesLidState, CaseSignalClassifier.HalfAwake(packet.Data));
         // The stopwatch for "how long did the popup take" starts at the first open packet of
         // a cycle, not at the moment the state machine finally believes it.
         // A wake-up counts as the first open packet of its cycle too, so the log reports the
@@ -636,6 +636,7 @@ public partial class App : System.Windows.Application
 
         if (!_lid.ShouldTimeout(now)) return;
         bool unconfirmed = _lid.WakeUnconfirmed;
+        bool halfAwake = _lid.HalfAwakeOnly;
         bool saidItsPiece = _lid.SaidItsPiece;
         string state = _lid.Describe(now);
         // An unproven wake-up leaves no cycle behind, or its own suspension would stop the
@@ -645,10 +646,12 @@ public partial class App : System.Windows.Application
         _cycleFirstOpenAt = default;
         Logger.Info(unconfirmed
             ? $"Popup hidden: the case woke up, never said the lid was open, and has now been quiet for {(int)LidStateMachine.WakeQuiet.TotalMilliseconds} ms"
+            : halfAwake
+                ? $"Popup hidden: the earbud in the case only spoke half awake and has been quiet for {(int)LidStateMachine.HalfAwakeTail.TotalMilliseconds} ms; this cycle is spent, the next opening shows it again"
             : saidItsPiece
                 ? $"Popup hidden: the case has been quiet for {(int)LidStateMachine.QuietTail.TotalSeconds}s within the first {(int)LidStateMachine.BurstWindow.TotalSeconds}s of the popup; this cycle is spent, the next opening shows it again"
                 : $"Popup hidden: the case has said nothing for {(int)LidStateMachine.StreamTimeout.TotalSeconds}s; this cycle is spent, the next opening shows it again");
-        Logger.Trace($"hide reason={(unconfirmed ? "wake-quiet" : saidItsPiece ? "quiet-tail" : "silence")} {state}");
+        Logger.Trace($"hide reason={(unconfirmed ? "wake-quiet" : halfAwake ? "half-tail" : saidItsPiece ? "quiet-tail" : "silence")} {state}");
         _casePopup?.HideForSignalTimeout();
     }
 

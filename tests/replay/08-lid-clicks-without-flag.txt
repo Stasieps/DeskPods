@@ -2,12 +2,17 @@
 !paired 1
 !connected 0
 !nearby 1
-!expect shows 3
-!expect hides 3
+!expect shows 4
+!expect hides 4
 !expect show-within-ms 250
 !expect hide-within-ms 250
 #
 # captured 2026-08-29, session v0.8.9, replayed byte for byte
+#
+# 0.8.48: the first word (status 0x24, open c1) comes from a half-awake earbud and nothing
+# follows it for 5.4 s, so the card goes after the 3.5 s HalfAwakeTail. The next word is
+# open c2: the lid was shut and opened again in between without a word on the air, and
+# the new counter shows the card again at once - one more show and hide than before.
 #
 p 0 7D1D42B68B79 -58 2 1 1 071901142024FA931100006A64E0F60D6C11FDE008F26AE17BD8E6
 p 693 7C6934E7440F -61 1 1 1 071901142002F88F110005C44D760499433245409ECA6529B61893

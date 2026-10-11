@@ -65,6 +65,18 @@ public enum LidAction
 ///   * the 250 ms lockout guards only the counter that was just closed.
 ///   * a shut word older than the last open word, or carrying the counter of the cycle before
 ///     the one on screen, is a late copy and cannot take the popup away.
+///
+/// 0.8.48 answers two reports of 2026-10-11 - a card that came up after the lid was shut, and
+/// a card that stayed five seconds on a shut case:
+///
+///   * a wake-up needs counter 0. An earbud that wakes up takes a new address and counts the
+///     openings from zero again (23:53:58: counter 5, then 0 from the next address 4 s later),
+///     so a first word "shut, counter 1" says the lid was opened and shut again while the
+///     earbud was still waking up. The card that word raised came after the lid was shut:
+///     19:49:54 for 6.1 s, 00:07:05 for 6 s. "Shut, counter 0" still wakes the popup - there
+///     the earbud woke before the lid moved, and the card is up 2 s before the open word.
+///   * a popup that only ever heard a half-awake earbud leaves after <see cref="HalfAwakeTail"/>
+///     instead of <see cref="QuietTail"/>.
 public sealed class LidStateMachine
 {
     /// <summary>Case packets needed to show the popup. Its bursts run at about 8 Hz.</summary>
@@ -90,6 +102,19 @@ public sealed class LidStateMachine
     /// and the second open word of one cycle and five seconds dropped the card in between.
     /// </summary>
     public static readonly TimeSpan QuietTail = TimeSpan.FromSeconds(6);
+
+    /// <summary>
+    /// 0.8.48: the tail for a popup whose earbud never woke up properly. After a while in the
+    /// shut case the earbud answers the lid half awake - byte 5 with bit 2 but without bit 6,
+    /// 0x04 or 0x24, and one battery unknown - and sometimes says "open" two or three times
+    /// and then nothing at all, not even the close: on 2026-10-11 at 00:49:47 three words in
+    /// 0.14 s, and the card sat out the whole <see cref="QuietTail"/> on a shut case (also
+    /// 23:39:36 and 00:26:03). Such a popup goes 3.5 s after the last word. Not less: in
+    /// fixture 07 an open lid is silent for 2.93 s between its half-awake words and its first
+    /// full one. One full word puts the popup back on the ordinary tails; a wake-up the case
+    /// has not confirmed keeps <see cref="WakeQuiet"/>.
+    /// </summary>
+    public static readonly TimeSpan HalfAwakeTail = TimeSpan.FromMilliseconds(3500);
 
     /// <summary>
     /// How long after the popup appears the short tail applies. Past this the case has proven
@@ -135,6 +160,8 @@ public sealed class LidStateMachine
     /// Before its first word of a session the silence counts as long: the app cannot know
     /// how long the case was quiet, and the first opening after a start, a reboot or an
     /// unlock is exactly the one the user is waiting for.
+    /// 0.8.48: only a shut word with counter 0 wakes the popup. Counter 1 or more means the
+    /// lid has already been opened and shut since the earbud woke up (see the class notes).
     /// </summary>
     private static readonly TimeSpan WakeSilence = TimeSpan.FromSeconds(10);
 
@@ -202,6 +229,7 @@ public sealed class LidStateMachine
     private ulong _spentAddress;
     private DateTimeOffset _spentAt;
     private bool _spentByHand;
+    private bool _fullWordSeen;
 
     public bool IsOpen => _open;
 
@@ -252,7 +280,11 @@ public sealed class LidStateMachine
     /// True when the lid byte carried Apple's explicit lid bit. Retained for diagnostics;
     /// the silence-based wake heuristic acts on an explicit closed word as well.
     /// </param>
-    public LidAction Handle(bool carriesLidState, bool isCaseOpen, int cycle, ulong address, DateTimeOffset now, bool trusted = true, bool bound = true, bool provenFresh = false, bool explicitLid = false)
+    /// <param name="halfAwake">
+    /// 0.8.48: true when the word came from a half-awake earbud
+    /// (<see cref="CaseSignalClassifier.HalfAwake"/>). See <see cref="HalfAwakeTail"/>.
+    /// </param>
+    public LidAction Handle(bool carriesLidState, bool isCaseOpen, int cycle, ulong address, DateTimeOffset now, bool trusted = true, bool bound = true, bool provenFresh = false, bool explicitLid = false, bool halfAwake = false)
     {
         LastObservedClosingEdge = false;
         _holdingShutWord = false;
@@ -265,6 +297,10 @@ public sealed class LidStateMachine
         // The earbuds' own advertisement. It says nothing about the lid, so it may not
         // open the popup, close it, or touch a single timer.
         if (!carriesLidState) { LastBlockReason = "earbud packet, no lid state"; return LidAction.None; }
+
+        // 0.8.48: one word from an earbud that is properly awake ends the half-awake tail of
+        // the popup on screen. Every opening below starts the count again with its own word.
+        if (!halfAwake) _fullWordSeen = true;
 
         // 0.8.47: silence since the case's own last word. Before its first word of this
         // session (or since the OS reset) it is unknown, and unknown counts as long.
@@ -322,8 +358,12 @@ public sealed class LidStateMachine
             // Not after a spent cycle, though: there the lid was left open, and a hand on the
             // case is far more likely to be shutting it. Its own counter never wakes anything,
             // and no counter does for SpentWindow after the popup left.
+            //
+            // 0.8.48: and only on counter 0. The earbud counts the openings from zero after it
+            // wakes up, so "shut" with counter 1 or more is a lid that has already been opened
+            // and shut again: a card raised now would come after the lid was closed.
             bool spentHold = spent || (_spentCycle >= 0 && now >= _spentAt && now - _spentAt <= SpentWindow);
-            if (!_open && provenFresh && sinceCase >= WakeSilence && !LastObservedClosingEdge && !spentHold)
+            if (!_open && provenFresh && sinceCase >= WakeSilence && !LastObservedClosingEdge && !spentHold && cycle == 0)
             {
                 _open = true;
                 _cycleShownAt = now;
@@ -341,6 +381,7 @@ public sealed class LidStateMachine
                 // An open word after a long silence needs none of this - it takes the ordinary
                 // path below and shows the popup at once.
                 _wakeUnconfirmed = true;
+                _fullWordSeen = !halfAwake;
                 _closedAt = default;
                 _closedCycle = -1;
                 LastBlockReason = string.Empty;
@@ -426,6 +467,7 @@ public sealed class LidStateMachine
             _liveAddress = address;
             _lastOpenAt = now;
             _wakeUnconfirmed = false;
+            _fullWordSeen = !halfAwake;
             _closedAt = default;
             _closedCycle = -1;
             LastBlockReason = string.Empty;
@@ -497,6 +539,7 @@ public sealed class LidStateMachine
         _liveCycle = cycle;
         _liveAddress = address;
         _wakeUnconfirmed = false;
+        _fullWordSeen = !halfAwake;
         _closedAt = default;
         _closedCycle = -1;
         LastBlockReason = string.Empty;
@@ -511,8 +554,15 @@ public sealed class LidStateMachine
     public bool SaidItsPiece => _cycleShownAt != default && _lastCaseAt != default
         && _lastCaseAt - _cycleShownAt <= BurstWindow;
 
+    /// <summary>
+    /// 0.8.48: true while every word since this popup appeared came from a half-awake earbud,
+    /// inside the first <see cref="BurstWindow"/>, and the popup is not a wake-up the case has
+    /// yet to confirm. Then <see cref="HalfAwakeTail"/> applies.
+    /// </summary>
+    public bool HalfAwakeOnly => _open && !_fullWordSeen && !_wakeUnconfirmed && SaidItsPiece;
+
     /// <summary>How much silence this popup is allowed before it goes.</summary>
-    public TimeSpan ActiveTail => SaidItsPiece ? QuietTail : StreamTimeout;
+    public TimeSpan ActiveTail => HalfAwakeOnly ? HalfAwakeTail : SaidItsPiece ? QuietTail : StreamTimeout;
 
     /// <summary>True when the case went quiet while the popup was up.</summary>
     public bool ShouldTimeout(DateTimeOffset now)
@@ -573,7 +623,7 @@ public sealed class LidStateMachine
         _wakeOpenedAt = default; _wakeCycle = -1; _wakeUnconfirmed = false; _holdingShutWord = false;
         _closedAt = default; _closedCycle = -1; _closedAddress = 0;
         _echoStreak = 0; _echoStartedAt = default; _echoOverrideAllowed = false;
-        _liveCycle = -1; _liveAddress = 0;
+        _liveCycle = -1; _liveAddress = 0; _fullWordSeen = false;
         ClearSpent();
         LastSilenceMs = -1; LastBlockReason = "system-reset";
     }
@@ -659,7 +709,7 @@ public sealed class LidStateMachine
             + " sinceOpenMs=" + sinceOpen
             + " lockoutLeftMs=" + lockoutLeft
             + " toTimeoutMs=" + toTimeout
-            + " tail=" + (SaidItsPiece ? "quiet" : "stream")
+            + " tail=" + (HalfAwakeOnly ? "half" : SaidItsPiece ? "quiet" : "stream")
             + " silenceMs=" + LastSilenceMs
             + " wakeMs=" + sinceWake
             + " wakeHold=" + (_wakeUnconfirmed ? 1 : 0);
