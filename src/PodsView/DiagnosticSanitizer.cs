@@ -29,7 +29,9 @@ internal static class DiagnosticSanitizer
       "console-connect", "console-disconnect", "session-other", "case-silence", "missed-open",
       "pixel-check-advisory", "futile", "in-ear", "out-of-case",
       // 0.8.47: the in-case door, spent cycles and late copies.
-      "in-case", "spent", "late" };
+      "in-case", "spent", "late",
+      // 0.8.48: the half-awake tail.
+      "half", "half-tail" };
 
     internal static string? Sanitize(string line)
     {

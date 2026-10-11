@@ -1,0 +1,18 @@
+# SYNTHETIC, after the trace of 2026-10-11 00:49:47 (0.8.48). The earbud in a case shut for
+# six minutes answers the lid half awake - byte 5 = 0x04, one battery unknown - with three
+# "open" words in 0.14 s and then nothing: no full word and no close, although the lid was
+# shut again a moment later. 0.8.47 kept that card up for the whole 6 s quiet tail (6.16 s
+# in the trace). A popup that only ever heard a half-awake earbud now leaves 3.5 s after the
+# last word (LidStateMachine.HalfAwakeTail): 3.75 s with the 250 ms watchdog tick.
+!name 22-synthetic-half-awake-tail
+!paired 1
+!connected 0
+!nearby 1
+!expect shows 1
+!expect hides 1
+!expect show-within-ms 0
+!expect popup-lives-at-least-ms 3500
+!expect popup-lives-at-most-ms 4000
+p 0 5A1F0E2D3C4B -64 1 1 1 071901142004F895310000CC8EA9B71CA710A6C0CFD7F73F0643BB
+p 113 5A1F0E2D3C4B -58 1 1 1 071901142004F895310000CC8EA9B71CA710A6C0CFD7F73F0643BB
+p 135 5A1F0E2D3C4B -66 1 1 1 071901142004F895310000CC8EA9B71CA710A6C0CFD7F73F0643BB

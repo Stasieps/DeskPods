@@ -22,18 +22,19 @@ internal static class Release29Regressions
         }
         var firstAfterIdle = new LidStateMachine();
         firstAfterIdle.BeginListening(t,t);
-        check(firstAfterIdle.Handle(true,false,1,1,t.AddHours(3),provenFresh:true) == LidAction.Open,
+        // 0.8.48: wake words carry counter 0 (a shut word with counter 1 or more never wakes).
+        check(firstAfterIdle.Handle(true,false,0,1,t.AddHours(3),provenFresh:true) == LidAction.Open,
             "Familiar silent case failed to wake on the first packet after 3 hours of listening");
         // 0.8.47: before the case's first word the silence is unknown, and unknown counts
         // as long - the first opening after start, boot or unlock must show at once. That
         // first word is a wake even when it is the old "shut" snapshot. BeginListening no
         // longer sets a clock, so a future listen epoch cannot hold the wake back either.
         var cold = new LidStateMachine();
-        check(cold.Handle(true,false,1,1,t.AddHours(3),provenFresh:true) == LidAction.Open,
+        check(cold.Handle(true,false,0,1,t.AddHours(3),provenFresh:true) == LidAction.Open,
             "The case's first word since start did not wake the popup");
         check(cold.LastSilenceMs < 0,"The first word reported a silence nobody measured");
         var future = new LidStateMachine(); future.BeginListening(t.AddHours(4),t);
-        check(future.Handle(true,false,1,1,t.AddHours(3),provenFresh:true) == LidAction.Open,"A listen epoch held back the first-word wake");
+        check(future.Handle(true,false,0,1,t.AddHours(3),provenFresh:true) == LidAction.Open,"A listen epoch held back the first-word wake");
         var shortEcho = ClosedPair();
         check(shortEcho.Handle(true,true,1,1,t.AddSeconds(30),provenFresh:true) == LidAction.None,"Short echo bypassed its guard");
         var boundary = ClosedPair();
@@ -49,8 +50,8 @@ internal static class Release29Regressions
         check(dismissed.Handle(true,true,1,1,t.AddHours(3),provenFresh:true) == LidAction.None,"Idle reopened a manually dismissed cycle");
         // 0.8.47: closing by hand marks the cycle spent, so its own shut word never wakes the card.
         var dismissedWake = new LidStateMachine();
-        dismissedWake.Handle(true,true,1,1,t,provenFresh:true); dismissedWake.ForceClosed(t.AddSeconds(1));
-        check(dismissedWake.Handle(true,false,1,1,t.AddHours(3),provenFresh:true) == LidAction.None,"Closed-word wake bypassed manual dismissal");
+        dismissedWake.Handle(true,true,0,1,t,provenFresh:true); dismissedWake.ForceClosed(t.AddSeconds(1));
+        check(dismissedWake.Handle(true,false,0,1,t.AddHours(3),provenFresh:true) == LidAction.None,"Closed-word wake bypassed manual dismissal");
 
         byte[] bytes = Convert.FromHexString("071901142070A93631000045121212".PadRight(54,'0'));
         check(AirPodsAdvertisementParser.TryParse(bytes,out var parsed) && parsed!.ModelCode == 0x1420,"Raw model code was discarded");

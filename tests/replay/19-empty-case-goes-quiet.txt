@@ -14,6 +14,8 @@
 # 0.8.47: the quiet tail is 6 s, and the case's first word - the shut c7 it said as the
 # hand moved it, 225 ms before its open c0 - already raises the card. So it lives 7.0 s:
 # from 0 to the last word at 0.96 s, plus 6 s, plus one 250 ms watchdog tick.
+# 0.8.48: only a shut word with counter 0 wakes the popup, so the card comes with the open
+# c0 at 225 ms and lives 6.8 s. Status 0x73 is an earbud that is awake: the 6 s tail stays.
 !expect shows 1
 !expect hides 1
 !expect popup-lives-at-least-ms 4500

@@ -3,6 +3,8 @@
 # spent cycle 1 - its lid is very probably still open - so the fresh open word of that
 # same cycle at 12 s may not raise it again. The shut word at 12.1 s then has nothing to
 # hide (the card is already gone), so there is no hide latency to measure here.
+# 0.8.48: status 0x24 is a half-awake earbud, so the card goes after the 3.5 s
+# HalfAwakeTail (3.75 s with the watchdog tick) instead of 6.25 s. The rest is unchanged.
 !name 20-synthetic-fresh-resume
 !paired 1
 !connected 0

@@ -19,7 +19,7 @@ internal static class ReplayRunner
         }
         expect(folder is not null, "Replay directory missing");
         string[] paths = Directory.GetFiles(folder!, "*.txt").Order(StringComparer.Ordinal).ToArray();
-        expect(paths.Length >= 19, "All 19 regression recordings must be present");
+        expect(paths.Length >= 23, "All 23 regression recordings must be present");
         foreach (string path in paths) RunFixture(path, expect);
     }
     private static void RunFixture(string path, Action<bool, string> expect)
@@ -127,7 +127,8 @@ internal static class ReplayRunner
                 previousCase = row.Ms;
             }
             LidAction action = machine.Handle(believe, data.IsCaseOpen, data.LidOpenCounter, row.Address, now,
-                trusted: row.Trusted, bound: row.Bound, provenFresh: row.AgeMs >= 0 && row.AgeMs <= 2000, explicitLid: data.CarriesLidState);
+                trusted: row.Trusted, bound: row.Bound, provenFresh: row.AgeMs >= 0 && row.AgeMs <= 2000, explicitLid: data.CarriesLidState,
+                halfAwake: CaseSignalClassifier.HalfAwake(data));
             if (action == LidAction.Open)
             {
                 shows.Add(row.Ms);

@@ -58,24 +58,26 @@ internal static class Release34Regressions
             check(lid.LastObservedClosingEdge && !lid.IsOpen,"34: missing negative closing-edge evidence");
         }
         // TTL boundary, separate peers/cycles, no stale, backwards-clock or unbound evidence.
+        // 0.8.48: the shut words that may wake carry counter 0 - a shut word with counter 1 or
+        // more never wakes the popup, so it could not show what the evidence vetoes.
         foreach (double gap in new[]{1.5,1.501})
         {
             var lid=new LidStateMachine();lid.BeginListening(t,t);
-            lid.Handle(false,true,1,4,t.AddSeconds(40),provenFresh:true);
-            var action=lid.Handle(true,false,1,4,t.AddSeconds(40+gap),provenFresh:true);
+            lid.Handle(false,true,0,4,t.AddSeconds(40),provenFresh:true);
+            var action=lid.Handle(true,false,0,4,t.AddSeconds(40+gap),provenFresh:true);
             check((action==LidAction.None)==(gap<=1.5),"34: negative evidence TTL boundary changed");
         }
-        foreach (var pair in new[]{(1,5UL),(2,4UL)})
+        foreach (var (edgeCycle, wordPeer) in new[]{(0,5UL),(1,4UL)})
         {
             var lid=new LidStateMachine();lid.BeginListening(t,t);
-            lid.Handle(false,true,1,4,t.AddSeconds(40),provenFresh:true);
-            check(lid.Handle(true,false,pair.Item1,pair.Item2,t.AddSeconds(40.5),provenFresh:true)==LidAction.Open,
+            lid.Handle(false,true,edgeCycle,4,t.AddSeconds(40),provenFresh:true);
+            check(lid.Handle(true,false,0,wordPeer,t.AddSeconds(40.5),provenFresh:true)==LidAction.Open,
                 "34: one peer/cycle incorrectly vetoed another");
         }
         var reset=new LidStateMachine(); reset.BeginListening(t,t);
-        reset.Handle(false,true,1,4,t.AddSeconds(40),provenFresh:true);
+        reset.Handle(false,true,0,4,t.AddSeconds(40),provenFresh:true);
         reset.ResetForSystem(t.AddSeconds(40.1));reset.BeginListening(t,t.AddSeconds(40.1));
-        check(reset.Handle(true,false,1,4,t.AddSeconds(40.5),provenFresh:true)==LidAction.Open,"34: negative evidence survived system reset");
+        check(reset.Handle(true,false,0,4,t.AddSeconds(40.5),provenFresh:true)==LidAction.Open,"34: negative evidence survived system reset");
         var edges=new RecentLidEdges();
         for(ulong peer=1;peer<=1000;peer++)
         {

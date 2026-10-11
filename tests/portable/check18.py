@@ -35,7 +35,12 @@ FROZEN_DIGESTS = {
     # copies are ignored, the lockout covers the same cycle only, the quiet tail is 6 s
     # and the close button marks its cycle spent. ParserSmoke, sim.py and the replay
     # fixtures pin that behaviour; this digest freezes the reviewed 0.8.47 text.
-    "LidStateMachine.cs": "5304a327b9750415b76783eb7e818690fd0ea4b654385b30332b298bf92ad2ad",
+    # 0.8.48: re-hashed ON PURPOSE again. The wake door opens on counter 0 only (after
+    # waking the earbud counts the openings from zero, so "shut" with counter 1 or more is
+    # a lid already opened and shut), and a card only a half-awake earbud raised goes after
+    # HalfAwakeTail (3.5 s) instead of QuietTail. Release48Regressions, sim.py and replay
+    # fixtures 22/23 pin it; this digest freezes the reviewed 0.8.48 text.
+    "LidStateMachine.cs": "06f0d60b32943d4dea406de42be9b13f79d6c20e066edbd3ea1a600374d77e5e",
     "DeviceTracker.cs": "32adc08d97bb2b0694b4e3bb30a85142cf59dd6309b545a5e0efb1fccb340c73",
     "PacketFilter.cs": "fd08e90ec66cce52a6886e90b1b50b112b66000275d6c217194b5a02d9fe3a1c",
     "BluetoothMonitor.cs": "4e94a573c728370c98e9317efcbb35a2b3e98458aa156a0e109b2bd1ec1f9676",
@@ -207,18 +212,20 @@ check("internal static event Action? Changed" in theme, "themes cannot notify op
 check("Changed?.Invoke()" in theme, "the theme event is never raised")
 for field in ["PopupCanvas", "PopupRim", "PopupGlow"]:
     check(f'Set(resources, "{field}"' in theme, f"Apply() does not publish {field}")
-# 0.8.47: five looks (TERMINAL, CARBON and NEON were removed), each with its own popup
-# card: one default on the field plus four overrides - mono keeps the field value.
-check(theme.count("PopupCanvas = ") == 5, f"expected 1 default plus 4 popup overrides, found {theme.count('PopupCanvas = ')}")
-check(theme.count("PopupRim = ") == 5, f"expected 1 default plus 4 rim overrides, found {theme.count('PopupRim = ')}")
-check(theme.count("PopupGlow = ") == 5, f"expected 1 default plus 4 glow overrides, found {theme.count('PopupGlow = ')}")
-check(theme.count("new Palette") == 5, f"expected 5 palettes, found {theme.count('new Palette')}")
+# 0.8.48: four looks (0.8.47 removed TERMINAL, CARBON and NEON, 0.8.48 E-INK), each with its
+# own popup card: one default on the field plus three overrides - mono keeps the field value.
+check(theme.count("PopupCanvas = ") == 4, f"expected 1 default plus 3 popup overrides, found {theme.count('PopupCanvas = ')}")
+check(theme.count("PopupRim = ") == 4, f"expected 1 default plus 3 rim overrides, found {theme.count('PopupRim = ')}")
+check(theme.count("PopupGlow = ") == 4, f"expected 1 default plus 3 glow overrides, found {theme.count('PopupGlow = ')}")
+check(theme.count("new Palette") == 4, f"expected 4 palettes, found {theme.count('new Palette')}")
 palette_ids = re.findall(r'new Palette\s*\{\s*Id = "([a-z]+)"', theme)
 setting_ids = re.findall(r'"([a-z]+)"', re.search(r'ThemeIds = \{([^}]*)\}', sources["AppSettings.cs"]).group(1))
 check(palette_ids == setting_ids, f"theme ids differ: palettes {palette_ids}, settings {setting_ids}")
-for gone in ["terminal", "carbon", "neon"]:
+for gone in ["terminal", "carbon", "neon", "eink"]:
     check(gone not in palette_ids and gone not in setting_ids, f"the removed theme {gone} is still offered")
-check("eink" in palette_ids and "4  E-INK  (paper)" in theme, "the E-INK theme is missing or misnumbered")
+# 0.8.48: one kind of name for every look - no numbers, no capitals, no notes in brackets.
+palette_labels = re.findall(r'Id = "[a-z]+", Label = "([^"]*)"', theme)
+check(palette_labels == ["Refined", "Classic", "Glass", "Swiss"], f"theme names are not the agreed four: {palette_labels}")
 check("value.Length == 8" in theme, "the palette parser cannot read the popup opacity")
 check('resources["ProductGlow"] = BuildGlow' in theme, "the halo behind the photo is not theme aware")
 
@@ -599,7 +606,7 @@ appearance = sources["MainWindow.Appearance.cs"]
 tray_appearance = sources["TrayAppearance.cs"]
 settings = sources["AppSettings.cs"]
 check('Id = "refined"' in theme and 'Id = "mono"' in theme, "Refined or Classic palette lost")
-check('Classic - MONO+' in theme, "Classic cannot be identified in the menu")
+check('Id = "mono", Label = "Classic"' in theme, "Classic cannot be identified in the menu")
 check('public string Theme { get; set; } = "refined"' in settings, "New default is not Refined")
 check('value.PreviousTheme = value.Theme' in settings and 'value.SettingsRevision < 9' in settings, "Previous palette is not preserved during migration")
 check('new CornerRadius(12)' in appearance and 'new RectangleGeometry' in appearance, "Rounded content clipping missing")
@@ -690,8 +697,27 @@ for sim_text, code_text in [("QUIET_TAIL = 6.0", "QuietTail = TimeSpan.FromSecon
                             ("WAKE_SILENCE = 10.0", "WakeSilence = TimeSpan.FromSeconds(10)"),
                             ("WAKE_QUIET = 6.0", "WakeQuiet = TimeSpan.FromSeconds(6)"),
                             ("TIMEOUT = 10.0", "StreamTimeout = TimeSpan.FromSeconds(10)"),
-                            ("LOCKOUT = 0.25", "_closeLockout = TimeSpan.FromMilliseconds(250)")]:
+                            ("LOCKOUT = 0.25", "_closeLockout = TimeSpan.FromMilliseconds(250)"),
+                            ("HALF_TAIL = 3.5", "HalfAwakeTail = TimeSpan.FromMilliseconds(3500)")]:
     check(sim_text in model and code_text in lid28, f"sim.py and LidStateMachine disagree: {sim_text} / {code_text}")
+
+# ---------------------------------------------------------------- 0.8.48
+# The wake door opens on counter 0 only: after waking the earbud counts the openings from
+# zero, so "shut" with counter 1 or more is a lid already opened and shut again. A card that
+# only a half-awake earbud raised (status bit 2 without bit 6) goes after HalfAwakeTail.
+check("!LastObservedClosingEdge && !spentHold && cycle == 0)" in lid28, "the wake door opens on a counter the earbud only reaches after the lid was opened")
+check("and not observed_closing_edge and not spent_hold and cycle == 0" in model, "sim.py's wake door does not mirror the counter-0 rule")
+check("internal static bool HalfAwake(ParsedAirPodsData data)" in classifier and "((data.Identity >> 16) & 0x44) == 0x04" in classifier, "the half-awake classifier is missing or changed")
+check("return identity != 0 and ((identity >> 16) & 0x44) == 0x04" in model, "sim.py's half-awake test does not mirror the classifier")
+check("CaseSignalClassifier.HalfAwake(packet.Data));" in sources["App.xaml.cs"], "the app does not tell the lid which words are half awake")
+check("ActiveTail => HalfAwakeOnly ? HalfAwakeTail : SaidItsPiece ? QuietTail : StreamTimeout" in lid28
+      and "if (!halfAwake) _fullWordSeen = true;" in lid28, "the half-awake tail is not wired into the tail")
+check(lid28.count("_fullWordSeen = !halfAwake;") == 3, "an opening does not start the half-awake count again")
+check('halfAwake ? "half-tail"' in sources["App.xaml.cs"] and '"half", "half-tail"' in sources["DiagnosticSanitizer.cs"], "the hide reason or the safe export drops the half-awake words")
+check("kind = 'half-tail' if self.half_only() else 'silence'" in model, "sim.py does not model the half-awake tail")
+check("Release48Regressions.Run(Expect);" in read(ROOT, "tests", "PodsView.ParserSmoke", "Program.cs"), "the 0.8.48 regressions are not run")
+for fixture in ["22-synthetic-half-awake-tail.txt", "23-synthetic-half-then-full.txt"]:
+    check(os.path.exists(os.path.join(ROOT, "tests", "replay", fixture)), f"replay fixture {fixture} is missing")
 
 print(f"check18: {checks} checks, {len(failures)} failures")
 for failure in failures:

@@ -20,9 +20,11 @@
 # address at 32.1 s is believed by the in-case door and shows for the 6 s quiet tail.
 # A lone word cannot be told from a real opening - fixtures 01, 08, 14, 15 and 18 open
 # with exactly that - so this single 6 s card is the accepted cost. Nothing else shows.
+# 0.8.48: status 0x24 is a half-awake earbud, so the card goes after the 3.5 s
+# HalfAwakeTail instead (3.75 s with the 250 ms watchdog tick).
 !expect shows 1
 !expect hides 1
-!expect popup-lives-at-most-ms 6500
+!expect popup-lives-at-most-ms 4000
 p 0 6E3648A9DAF9 -69 1 1 1 071901142002F98F110005E78EC410A1F6935260823594DE5C434D
 p 26805 6E3648A9DAF9 -63 1 1 1 071901142002F98F110005CE528BF8F9477AFA79A0D2F69F066E88
 p 32061 612F4B9CE3B6 -58 1 1 1 071901142024FA9311000070BE9A810E4A61F2D215A2544D9CA4AA
