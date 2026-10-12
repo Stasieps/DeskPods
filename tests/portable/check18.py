@@ -620,7 +620,7 @@ check('"deskpods-tray-airpods-dark-taskbar"' in tray_appearance and '"deskpods-t
 check('battery' not in tray_appearance.split('Create(')[1].split('ReadLightTaskbar')[0].replace('int? battery',''), "Battery state must not replace the tray picture")
 check('GetManifestResourceStream' in tray_appearance and 'Convert.FromBase64String' in tray_appearance and 'DeskPods.Brand.Icon' in sources['PodsView.csproj'] and '<LogicalName>DeskPods.Tray.DarkTaskbar</LogicalName>' in sources['PodsView.csproj'] and '<LogicalName>DeskPods.Tray.LightTaskbar</LogicalName>' in sources['PodsView.csproj'], "Tray icons are not embedded")
 check('_trayAppearanceKey == appearanceKey' in app_cs, "Theme switch cannot invalidate the tray icon cache")
-# 0.8.49: the tray is clean AirPods Pro in the layout of the user's photo (12.10.2026), one .ico per taskbar tone,
+# 0.8.49: the tray is a flat AirPods Pro glyph in the layout of the user's photo (12.10.2026), one .ico per taskbar tone,
 # kept as base64 text. Every DPI frame must be there as a 32-bit PNG, and the old "dp" glyph is gone.
 TRAY_FRAMES = [16, 20, 24, 28, 32, 36, 40, 48, 56, 64]
 for tone in ['dark', 'light']:

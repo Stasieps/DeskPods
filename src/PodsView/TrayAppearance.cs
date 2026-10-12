@@ -6,16 +6,13 @@ namespace PodsView;
 
 internal static class TrayAppearance
 {
-    // 0.8.49: the tray shows AirPods Pro as a clean product-style picture - glossy white shells,
-    // white silicone ear tips, black grilles, a silver stem end, like new earbuds in a store photo,
-    // not a photo of worn ones - laid out as in the user's photo (12.10.2026): the left earbud stem
-    // up with its tip to the left, the right one stem down with its tip to the right (the layout
-    // the 0.8.45 "dp" glyph abstracted). It is a picture, not a monochrome glyph, so it does not
-    // flip colour with the taskbar: on a dark taskbar it is drawn as is (a dark rim keeps the two
-    // earbuds apart at 16 px), on a light taskbar the same earbuds come slightly greyer with a thin
-    // grey outline so white does not vanish into white. The desktop/app logo (deskpods.ico,
-    // DeskPods.Brand.Icon) is unchanged, and charge or connection never replaces the picture (the
-    // tooltip has the charge).
+    // 0.8.49: the tray shows AirPods Pro as a flat one-colour glyph in the pixel style of the 0.8.45
+    // "dp" glyph - white on a dark taskbar, near-black (26,26,26) on a light one, like the other icons
+    // by the clock; the same shape for both, only the colour flips. It is drawn from clean shapes (a round
+    // shell, the silicone ear tip set off by a thin gap, a stem with a flat end) and laid out as in the
+    // user's photo (12.10.2026): the left earbud stem up with its tip to the left, the right one stem
+    // down with its tip to the right. The desktop/app logo (deskpods.ico, DeskPods.Brand.Icon) is
+    // unchanged, and charge or connection never replaces the glyph (the tooltip has the charge).
     // The .ico files live in Assets/Tray as base64 text (*.ico.b64): the tools that commit to this
     // repository write text files only. Frames: 16, 20, 24, 28, 32, 36, 40, 48, 56 and 64 px.
     internal static bool? LightTaskbarForVerification { get; set; }

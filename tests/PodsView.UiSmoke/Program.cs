@@ -155,9 +155,10 @@ internal static class Program
                     }
                 }
             }
-            // 0.8.49: the tray is clean AirPods Pro (white shells) in every DPI frame, on a transparent
-            // background, laid out as the user asked - the left earbud's stem rises above the right one,
-            // the right earbud's stem hangs below the left one - and the light-taskbar art is its own picture.
+            // 0.8.49: the tray is a flat AirPods Pro glyph in every DPI frame, on a transparent background:
+            // white on a dark taskbar, near-black on a light one (the same shape, only the colour flips), laid
+            // out as the user asked - the left earbud's stem rises above the right one, the right earbud's
+            // stem hangs below the left one.
             foreach (int size49 in new[] { 16, 20, 24, 32 })
             {
                 using Stream darkArt49 = TrayAppearance.OpenIcon(false) ?? throw new InvalidOperationException("49: dark-taskbar tray art is missing");
@@ -166,33 +167,39 @@ internal static class Program
                 using var lightIcon49 = new System.Drawing.Icon(lightArt49, size49, size49);
                 using var darkPixels49 = darkIcon49.ToBitmap();
                 using var lightPixels49 = lightIcon49.ToBitmap();
-                bool same49 = true;
-                foreach (var pixels49 in new[] { darkPixels49, lightPixels49 })
+                foreach (var (pixels49, light49) in new[] { (darkPixels49, false), (lightPixels49, true) })
                 {
                     Check(pixels49.Width == size49 && pixels49.Height == size49, "49: tray art has no " + size49 + " px frame");
                     Check(pixels49.GetPixel(0, 0).A == 0 && pixels49.GetPixel(size49 - 1, 0).A == 0 && pixels49.GetPixel(0, size49 - 1).A == 0 && pixels49.GetPixel(size49 - 1, size49 - 1).A == 0,
                         "49: tray art corners are not transparent at " + size49 + " px");
-                    int shell49 = 0, topLeft49 = size49, topRight49 = size49, bottomLeft49 = -1, bottomRight49 = -1;
+                    int ink49 = 0, wrongColour49 = 0, topLeft49 = size49, topRight49 = size49, bottomLeft49 = -1, bottomRight49 = -1;
                     for (int y = 0; y < size49; y++)
                     for (int x = 0; x < size49; x++)
                     {
                         System.Drawing.Color c49 = pixels49.GetPixel(x, y);
+                        if (c49.A >= 128 && (light49 ? Math.Max(c49.R, Math.Max(c49.G, c49.B)) > 50 : Math.Min(c49.R, Math.Min(c49.G, c49.B)) < 235)) wrongColour49++;
                         if (c49.A < 200) continue;
-                        if (Math.Min(c49.R, Math.Min(c49.G, c49.B)) < 185 || Math.Abs(c49.R - c49.B) > 14) continue;
-                        shell49++;
+                        ink49++;
                         if (x < size49 / 2) { topLeft49 = Math.Min(topLeft49, y); bottomLeft49 = Math.Max(bottomLeft49, y); }
                         else { topRight49 = Math.Min(topRight49, y); bottomRight49 = Math.Max(bottomRight49, y); }
                     }
-                    Check(shell49 >= size49 * size49 / 12, "49: tray art lost its white earbud shells at " + size49 + " px");
+                    Check(wrongColour49 == 0, "49: the tray glyph is not one flat " + (light49 ? "near-black" : "white") + " colour at " + size49 + " px");
+                    Check(ink49 >= size49 * size49 / 12, "49: the tray glyph lost its earbuds at " + size49 + " px");
                     Check(topRight49 - topLeft49 >= size49 / 5, "49: the left earbud's stem no longer points up at " + size49 + " px");
                     Check(bottomRight49 - bottomLeft49 >= size49 / 5, "49: the right earbud's stem no longer points down at " + size49 + " px");
                 }
-                for (int y = 0; same49 && y < size49; y++)
-                for (int x = 0; same49 && x < size49; x++)
-                    same49 = darkPixels49.GetPixel(x, y).ToArgb() == lightPixels49.GetPixel(x, y).ToArgb();
-                Check(!same49, "49: the light-taskbar tray art is not its own outlined picture at " + size49 + " px");
+                int differ49 = 0, shape49 = 0;
+                for (int y = 0; y < size49; y++)
+                for (int x = 0; x < size49; x++)
+                {
+                    System.Drawing.Color onDark49 = darkPixels49.GetPixel(x, y), onLight49 = lightPixels49.GetPixel(x, y);
+                    if (onDark49.ToArgb() != onLight49.ToArgb()) differ49++;
+                    if (Math.Abs(onDark49.A - onLight49.A) > 8) shape49++;
+                }
+                Check(differ49 > 0, "49: the light-taskbar tray glyph is not its own dark glyph at " + size49 + " px");
+                Check(shape49 == 0, "49: the light- and dark-taskbar tray glyphs are not the same shape at " + size49 + " px");
             }
-            Console.WriteLine("DeskPods 0.8.49: AirPods Pro tray art verified");
+            Console.WriteLine("DeskPods 0.8.49: AirPods Pro tray glyph verified");
             // .34: real loaded WPF layout, named controls and alpha, not a mockup.
             Check(popup.Width == 272 && popup.Height == 120, "34: popup geometry");
             var close34=(System.Windows.Controls.Button)popup.FindName("PopupCloseButton");
