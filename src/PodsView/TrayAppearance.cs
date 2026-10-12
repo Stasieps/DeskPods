@@ -8,10 +8,11 @@ internal static class TrayAppearance
 {
     // 0.8.49: the tray shows AirPods Pro as a flat one-colour glyph in the pixel style of the 0.8.45
     // "dp" glyph - white on a dark taskbar, near-black (26,26,26) on a light one, like the other icons
-    // by the clock; the same shape for both, only the colour flips. It is drawn from clean shapes (a round
-    // shell, the silicone ear tip set off by a thin gap, a stem with a flat end) and laid out as in the
+    // by the clock; the same shape for both, only the colour flips. The real outline is traced from the
     // user's photo (12.10.2026): the left earbud stem up with its tip to the left, the right one stem
-    // down with its tip to the right. The desktop/app logo (deskpods.ico, DeskPods.Brand.Icon) is
+    // down with its tip to the right. The user chose preview v4b #6: ear-tip seams at least 1 px wide,
+    // pixel grille cut-outs at 16-24 px, traced grille cut-outs and a stem-end ring on larger frames.
+    // The desktop/app logo (deskpods.ico, DeskPods.Brand.Icon) is
     // unchanged, and charge or connection never replaces the glyph (the tooltip has the charge).
     // The .ico files live in Assets/Tray as base64 text (*.ico.b64): the tools that commit to this
     // repository write text files only. Frames: 16, 20, 24, 28, 32, 36, 40, 48, 56 and 64 px.
