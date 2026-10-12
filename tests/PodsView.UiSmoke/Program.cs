@@ -133,7 +133,7 @@ internal static class Program
                 foreach (bool lightTaskbar in new[] { false, true })
                 {
                     TrayAppearance.LightTaskbarForVerification = lightTaskbar;
-                    Check(TrayAppearance.Key == (lightTaskbar ? "deskpods-tray-dp13-dark" : "deskpods-tray-dp13-light"), iconTheme + ": tray cache key does not follow the taskbar tone");
+                    Check(TrayAppearance.Key == (lightTaskbar ? "deskpods-tray-airpods-light-taskbar" : "deskpods-tray-airpods-dark-taskbar"), iconTheme + ": tray cache key does not follow the taskbar tone");
                     foreach (int? level in new int?[] { null,10,30,90 })
                     foreach (bool connected in new[] { false,true })
                     foreach (bool live in new[] { false,true })
@@ -142,8 +142,8 @@ internal static class Program
                         Check(icon.Width > 0 && icon.Height > 0, "Case tray icon could not load");
                         string tone = lightTaskbar ? "dark" : "light";
                         string state = !connected ? "disconnected" : level is <= 20 ? "low" : level is <= 40 ? "warning" : "normal";
-                        using Stream source = typeof(App).Assembly.GetManifestResourceStream(TrayAppearance.ResourceName(lightTaskbar))
-                            ?? throw new InvalidOperationException("Expected dp13 tray resource is missing");
+                        using Stream source = TrayAppearance.OpenIcon(lightTaskbar)
+                            ?? throw new InvalidOperationException("Expected AirPods tray resource is missing");
                         using var expected = new System.Drawing.Icon(source,icon.Width,icon.Height);
                         using var actualPixels = icon.ToBitmap();
                         using var expectedPixels = expected.ToBitmap();
@@ -151,10 +151,44 @@ internal static class Program
                         for (int y = 0; equal && y < actualPixels.Height; y++)
                         for (int x = 0; equal && x < actualPixels.Width; x++)
                             equal = actualPixels.GetPixel(x,y).ToArgb() == expectedPixels.GetPixel(x,y).ToArgb();
-                        Check(equal, iconTheme + ": tray pixels do not match the dp13 tray icon");
+                        Check(equal, iconTheme + ": tray pixels do not match the AirPods tray icon");
                     }
                 }
             }
+            // 0.8.49: the tray is the user's real AirPods Pro (white shells, cream ear tips) in every
+            // DPI frame, on a transparent background, and the light-taskbar art is its own picture.
+            foreach (int size49 in new[] { 16, 20, 24, 32 })
+            {
+                using Stream darkArt49 = TrayAppearance.OpenIcon(false) ?? throw new InvalidOperationException("49: dark-taskbar tray art is missing");
+                using Stream lightArt49 = TrayAppearance.OpenIcon(true) ?? throw new InvalidOperationException("49: light-taskbar tray art is missing");
+                using var darkIcon49 = new System.Drawing.Icon(darkArt49, size49, size49);
+                using var lightIcon49 = new System.Drawing.Icon(lightArt49, size49, size49);
+                using var darkPixels49 = darkIcon49.ToBitmap();
+                using var lightPixels49 = lightIcon49.ToBitmap();
+                bool same49 = true;
+                foreach (var pixels49 in new[] { darkPixels49, lightPixels49 })
+                {
+                    Check(pixels49.Width == size49 && pixels49.Height == size49, "49: tray art has no " + size49 + " px frame");
+                    Check(pixels49.GetPixel(0, 0).A == 0 && pixels49.GetPixel(size49 - 1, 0).A == 0 && pixels49.GetPixel(0, size49 - 1).A == 0 && pixels49.GetPixel(size49 - 1, size49 - 1).A == 0,
+                        "49: tray art corners are not transparent at " + size49 + " px");
+                    int shell49 = 0, tip49 = 0;
+                    for (int y = 0; y < size49; y++)
+                    for (int x = 0; x < size49; x++)
+                    {
+                        System.Drawing.Color c49 = pixels49.GetPixel(x, y);
+                        if (c49.A < 200) continue;
+                        if (Math.Min(c49.R, Math.Min(c49.G, c49.B)) >= 185 && Math.Abs(c49.R - c49.B) <= 14) shell49++;
+                        if (c49.R >= 180 && c49.R - c49.B >= 14) tip49++;
+                    }
+                    Check(shell49 >= size49 * size49 / 12, "49: tray art lost its white earbud shells at " + size49 + " px");
+                    Check(tip49 >= 4, "49: tray art lost its cream ear tips at " + size49 + " px");
+                }
+                for (int y = 0; same49 && y < size49; y++)
+                for (int x = 0; same49 && x < size49; x++)
+                    same49 = darkPixels49.GetPixel(x, y).ToArgb() == lightPixels49.GetPixel(x, y).ToArgb();
+                Check(!same49, "49: the light-taskbar tray art is not its own outlined picture at " + size49 + " px");
+            }
+            Console.WriteLine("DeskPods 0.8.49: AirPods Pro tray art verified");
             // .34: real loaded WPF layout, named controls and alpha, not a mockup.
             Check(popup.Width == 272 && popup.Height == 120, "34: popup geometry");
             var close34=(System.Windows.Controls.Button)popup.FindName("PopupCloseButton");

@@ -10,9 +10,11 @@ listening epochs and a fresh same-counter reopen after >120s silence. Timers are
 The separately documented cache/parser/lifecycle fixes are covered by linked C# tests.
 Passing this file never proves that the Windows build or animation executed.
 """
+import base64
 import hashlib
 import os
 import re
+import struct
 import sys
 import xml.etree.ElementTree as ET
 
@@ -614,13 +616,30 @@ check('_restoreAppearance.Clear()' in appearance and 'target.ClearValue(property
 check('_productPlayer.SetEnabled(!refined)' in appearance, "Refined runs the rejected animation")
 check('airpods-case-open.png' in sources['ProductTurntablePlayer.cs'] and 'if (!_enabled)' in player, "Refined still-photo path missing")
 check('ThemeManager' not in tray_appearance and 'TrayIconFactory.Create' not in tray_appearance, "Case tray must not depend on the window theme or use the old renderer")
-check('"deskpods-tray-dp13-dark"' in tray_appearance and '"deskpods-tray-dp13-light"' in tray_appearance and 'SystemUsesLightTheme' in tray_appearance, "Tray dp13 glyph must follow the taskbar tone")
-check('battery' not in tray_appearance.split('Create(')[1].split('ReadLightTaskbar')[0].replace('int? battery',''), "Battery state must not replace the tray glyph")
-check('GetManifestResourceStream' in tray_appearance and 'DeskPods.Brand.Icon' in sources['PodsView.csproj'] and 'DeskPods.Tray.Light' in sources['PodsView.csproj'] and 'DeskPods.Tray.Dark' in sources['PodsView.csproj'], "Tray icons are not embedded")
+check('"deskpods-tray-airpods-dark-taskbar"' in tray_appearance and '"deskpods-tray-airpods-light-taskbar"' in tray_appearance and 'SystemUsesLightTheme' in tray_appearance, "Tray AirPods picture must follow the taskbar tone")
+check('battery' not in tray_appearance.split('Create(')[1].split('ReadLightTaskbar')[0].replace('int? battery',''), "Battery state must not replace the tray picture")
+check('GetManifestResourceStream' in tray_appearance and 'Convert.FromBase64String' in tray_appearance and 'DeskPods.Brand.Icon' in sources['PodsView.csproj'] and '<LogicalName>DeskPods.Tray.DarkTaskbar</LogicalName>' in sources['PodsView.csproj'] and '<LogicalName>DeskPods.Tray.LightTaskbar</LogicalName>' in sources['PodsView.csproj'], "Tray icons are not embedded")
 check('_trayAppearanceKey == appearanceKey' in app_cs, "Theme switch cannot invalidate the tray icon cache")
+# 0.8.49: the tray is the user's own AirPods Pro (photo of 12.10.2026), one .ico per taskbar tone,
+# kept as base64 text. Every DPI frame must be there as a 32-bit PNG, and the old "dp" glyph is gone.
+TRAY_FRAMES = [16, 20, 24, 28, 32, 36, 40, 48, 56, 64]
+for tone in ['dark', 'light']:
+    art = os.path.join(SRC, 'Assets', 'Tray', f'airpods-{tone}-taskbar.ico.b64')
+    check(f'<EmbeddedResource Include="Assets\\Tray\\airpods-{tone}-taskbar.ico.b64">' in sources['PodsView.csproj'], f'Tray art for a {tone} taskbar is not embedded')
+    if not os.path.isfile(art):
+        check(False, f'Missing tray art {tone} taskbar')
+        continue
+    ico = base64.b64decode(''.join(open(art, encoding='ascii').read().split()), validate=True)
+    reserved, kind, count = struct.unpack('<HHH', ico[:6])
+    frames = []
+    for index in range(count):
+        width, height, colours, _, planes, bits, length, offset = struct.unpack('<BBBBHHII', ico[6 + 16 * index:22 + 16 * index])
+        frames.append(width or 256)
+        check(width == height and bits == 32 and offset + length <= len(ico) and ico[offset:offset + 8] == b'\x89PNG\r\n\x1a\n', f'Tray art {tone}: broken {width} px frame')
+    check(reserved == 0 and kind == 1 and frames == TRAY_FRAMES, f'Tray art {tone}: frames {frames}')
 for tone in ['light', 'dark']:
     for state in ['normal', 'disconnected', 'low', 'warning']:
-        check(os.path.isfile(os.path.join(SRC, 'Assets', 'Tray', f'case-{tone}-{state}.ico')), f'Missing tray icon {tone}/{state}')
+        check(not os.path.exists(os.path.join(SRC, 'Assets', 'Tray', f'case-{tone}-{state}.ico')), f'Old dp tray glyph case-{tone}-{state}.ico is back')
 check('RefinedForVerification' in read(ROOT,'tests','PodsView.UiSmoke','Program.cs'), "Windows Refined/Classic regression checks missing")
 check('Classic choice did not survive restart' in read(ROOT,'tests','PodsView.ParserSmoke','CoreRegressions.cs'), "Classic persistence check missing")
 

@@ -34,11 +34,12 @@
     <EmbeddedResource Include="Assets\deskpods.ico">
       <LogicalName>DeskPods.Brand.Icon</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Assets\Tray\case-light-normal.ico">
-      <LogicalName>DeskPods.Tray.Light</LogicalName>
+    <!-- 0.8.49: the tray art is the user's own AirPods Pro photo; stored as base64 text, see TrayAppearance.cs -->
+    <EmbeddedResource Include="Assets\Tray\airpods-dark-taskbar.ico.b64">
+      <LogicalName>DeskPods.Tray.DarkTaskbar</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Assets\Tray\case-dark-normal.ico">
-      <LogicalName>DeskPods.Tray.Dark</LogicalName>
+    <EmbeddedResource Include="Assets\Tray\airpods-light-taskbar.ico.b64">
+      <LogicalName>DeskPods.Tray.LightTaskbar</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

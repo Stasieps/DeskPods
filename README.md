@@ -43,7 +43,7 @@ So I built my own — and made it do exactly one thing, properly.
 | | |
 |---|---|
 | 🎧 **Pop-up card when you open the case** | Left, right and case battery, right in the corner of the screen. Close the lid — it goes away. |
-| 🔋 **Battery in the tray** | A small case icon next to the clock. It changes colour when charge gets low or the AirPods are gone. |
+| 🔋 **Battery in the tray** | A small picture of real AirPods Pro next to the clock. Hover over it to see the charge of each earbud and the case. |
 | 🔔 **One low-battery alert, not ten** | When an earbud gets low, you get one heads-up per discharge. You choose the threshold (10–50 %). |
 | 👂 **Doesn't get in the way** | Earbuds in your ears don't keep the card hanging on screen. No big windows over your desktop. |
 | ⌨️ **Shortcut** | Press `Ctrl` + `Alt` + `P` any time to see the card. You can change the shortcut. |
